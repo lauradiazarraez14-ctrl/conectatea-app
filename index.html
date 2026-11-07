@@ -113,6 +113,13 @@ textarea{min-height:84px}
 .instalar ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px}
 .instalar svg{width:20px;height:20px;vertical-align:-4px;stroke:var(--verde);fill:none;stroke-width:2}
 .instalar .x{position:absolute;top:10px;right:10px;background:none;border:0;font-size:22px;line-height:1;color:var(--apoyo);padding:4px}
+.rev .plazo{margin:8px 0 0;font-size:12px;font-weight:700;color:var(--tenue)}
+.rev .plazo.urge{color:#B4532F}
+.rev img{width:100%;border-radius:6px;margin-top:10px;background:var(--fondo)}
+.cita{margin:10px 0 0;font-size:14px;font-style:italic;background:var(--coral-suave);padding:10px 12px;border-radius:4px}
+.mini-lbl{display:block;margin:12px 0 6px;font-size:13px;font-weight:700;color:var(--apoyo)}
+.rev .btn{margin-top:10px}
+.wa{background:#25D366;color:#073B1D}
 .visor{position:fixed;inset:0;padding-top:env(safe-area-inset-top,0px);background:var(--fondo);overflow:auto;z-index:10}
 .visor .in{max-width:640px;margin:0 auto;padding:12px 16px 40px}
 .visor .doc{background:var(--superficie);border:1.5px solid var(--borde);border-radius:6px;padding:18px;overflow-wrap:anywhere}
@@ -153,6 +160,19 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
   </section>
 
   <div id="v-cargando" class="cargando">Cargando…</div>
+
+
+  <!-- PANTALLA DE LAURA -->
+  <section id="v-laura" hidden>
+    <div class="cab"><div><small>Tu pantalla</small><h2>Hola, Laura</h2></div><div class="avatar">L</div></div>
+    <div class="seccion-tit" style="margin-top:4px">Por revisar · <span id="n-pend">0</span></div>
+    <div class="pila" id="pendientes"></div>
+    <div class="tarjeta ok" id="todo-hecho" hidden>
+      <div class="circ">✓</div><h3>Todo revisado</h3>
+      <p>No tienes nada pendiente. Te avisaremos por Telegram cuando llegue algo nuevo.</p>
+    </div>
+    <button class="btn btn-sec" type="button" id="b-recargar" style="margin-top:16px">Actualizar</button>
+  </section>
 
   <!-- MI SEMANA -->
   <section id="v-inicio" hidden>
@@ -265,8 +285,10 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxgjPOSA7_SrD5orRMiR9kKFPjZATme8ic68UuaJM4d3EY39WGGQCBOqB9ZjkDcayoXmg/exec';
-const TOKEN = (new URLSearchParams(location.search).get('f') || '').replace(/[^\w-]/g, '');
-const CLAVE = 'ctea_' + TOKEN;
+const PARAMS = new URLSearchParams(location.search);
+const TOKEN = (PARAMS.get('f') || '').replace(/[^\w-]/g, '');
+const LAURA = (PARAMS.get('laura') || '').replace(/[^\w-]/g, '');
+const CLAVE = LAURA ? 'ctea_laura' : 'ctea_' + TOKEN;
 let LLAVE = null, DATOS = null;
 const $ = (id) => document.getElementById(id);
 
@@ -292,7 +314,7 @@ function el(tag, attrs, ...hijos){
 const fecha = (ms) => new Date(ms).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
 
 function mostrar(v){
-  ['login','sinenlace','inicio','registro','materiales'].forEach(n => $('v-' + n).hidden = n !== v);
+  ['login','sinenlace','inicio','registro','materiales','laura'].forEach(n => $('v-' + n).hidden = n !== v);
   $('v-cargando').hidden = true;
   $('tabs').hidden = !['inicio','registro','materiales'].includes(v);
   document.querySelectorAll('#tabs button').forEach(b => b.dataset.ir === v ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
@@ -305,9 +327,9 @@ $('f-login').onsubmit = async (e) => {
   e.preventDefault();
   const b = $('b-entrar'); b.disabled = true; $('login-error').hidden = true;
   try {
-    const r = await srv('entrar', TOKEN, $('codigo').value);
+    const r = LAURA ? await srv('entrarLaura', LAURA, $('codigo').value) : await srv('entrar', TOKEN, $('codigo').value);
     if (!r.ok){ $('login-error').textContent = r.msg; $('login-error').hidden = false; }
-    else { LLAVE = r.llave; guardarLlave(LLAVE); await cargar(); }
+    else { LLAVE = r.llave; guardarLlave(LLAVE); await (LAURA ? cargarLaura() : cargar()); }
   } catch(err){ $('login-error').textContent = 'No se ha podido entrar. Prueba otra vez.'; $('login-error').hidden = false; }
   b.disabled = false;
 };
@@ -380,7 +402,8 @@ function apoyoLaura(a){
     catch(e){ if (!sinAcceso(e)){ env.disabled = false; alert('No se ha podido enviar. Prueba otra vez.'); } }
   };
   caja.append(ta, env);
-  return el('div', {class:'tarjeta'}, archivoFila(a, 'PICTO'),
+  const estado = a.cambio ? el('p', {class:'linea'}, ...(a.cambio.respuesta ? [el('strong', {}, 'Laura: '), a.cambio.respuesta] : ['Has pedido un cambio. Laura lo está mirando.'])) : null;
+  return el('div', {class:'tarjeta'}, archivoFila(a, 'PICTO'), estado,
     el('button', {class:'enlace', type:'button', onclick: () => caja.hidden = !caja.hidden}, 'Pedir un cambio'), caja);
 }
 
@@ -484,9 +507,76 @@ window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); avis
 $('b-instalar').onclick = async () => { if (!avisoInstalar) return; avisoInstalar.prompt(); await avisoInstalar.userChoice; avisoInstalar = null; pintarInstalar(); };
 $('instalar-x').onclick = () => { try{ localStorage.setItem('ctea_inst_cerrado', '1'); }catch(e){} $('instalar').hidden = true; };
 
+
+// ── Pantalla de Laura ──
+const horaLimite = (ms) => {
+  const d = new Date(ms), hoy = new Date(), man = new Date(); man.setDate(hoy.getDate() + 1);
+  const h = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const dia = d.toDateString() === hoy.toDateString() ? 'hoy' : d.toDateString() === man.toDateString() ? 'mañana' : d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
+  return dia + ' a las ' + h;
+};
+const hace = (ms) => { const m = Math.round((Date.now() - ms) / 6e4); return m < 60 ? 'hace ' + Math.max(m, 1) + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : 'hace ' + Math.round(m / 1440) + ' días'; };
+
+async function cargarLaura(){
+  $('v-cargando').hidden = false;
+  let lista;
+  try { lista = await srv('pendientes', LAURA, LLAVE); }
+  catch(e){ if (!sinAcceso(e)) $('v-cargando').textContent = 'No se ha podido cargar. Cierra y vuelve a abrir.'; return; }
+  pintarLaura(lista); mostrar('laura');
+}
+
+function pintarLaura(lista){
+  $('n-pend').textContent = lista.length;
+  $('todo-hecho').hidden = lista.length > 0;
+  $('pendientes').replaceChildren(...lista.map(tarjetaRevision));
+}
+
+function tarjetaRevision(p){
+  const quien = p.madre + (p.nino ? ' · ' + p.nino : '');
+  const urge = p.limite - Date.now() < 4 * 3600 * 1000;
+  const ta = el('textarea', {'aria-label':'Tu comentario', placeholder: p.tipo === 'Cambio' ? 'Ej.: Claro, te lo cambio hoy y te lo subo a Materiales.' : 'Ej.: Está muy bien. Solo cambia…'});
+  const env = el('button', {class:'btn btn-prim', type:'button'}, 'Enviar a ' + p.madre);
+  const err = el('p', {class:'error', hidden:''});
+  const tarjeta = el('div', {class:'tarjeta rev'},
+    el('div', {class:'fila'}, el('div', {class: 'ico' + (p.tipo === 'Cambio' ? ' c' : '')}, p.tipo === 'Cambio' ? 'PICTO' : (p.esPdf ? 'PDF' : 'FOTO')),
+      el('div', {class:'txt'}, el('h4', {}, quien), el('p', {}, p.tipo === 'Cambio' ? 'Pide un cambio en: ' : 'Apoyo nuevo: ', el('strong', {}, p.apoyo)))),
+    el('p', {class: 'plazo' + (urge ? ' urge' : '')}, 'Llegó ' + hace(p.llego) + ' · responder antes de ' + horaLimite(p.limite)),
+    p.img ? el('img', {src:p.img, alt:p.apoyo}) : null,
+    p.esPdf ? el('button', {class:'mini', type:'button', style:'margin-top:10px', onclick: () => abrirLaura(p.archivo)}, 'Ver el PDF') : null,
+    p.texto ? el('p', {class:'cita'}, '«' + p.texto + '»') : null,
+    el('label', {class:'mini-lbl'}, 'Tu comentario'), ta, err, env);
+  env.onclick = async () => {
+    if (!ta.value.trim()){ err.textContent = 'Escribe el comentario antes de enviar.'; err.hidden = false; return; }
+    env.disabled = true; err.hidden = true;
+    try {
+      await srv('responder', LAURA, LLAVE, p.fila, ta.value);
+      const aviso = 'Hola ' + p.madre + ', te he dejado un comentario sobre «' + p.apoyo + '» en tu espacio ConectaTEA 💛';
+      const wa = 'https://wa.me/' + (p.telefono ? (p.telefono.length === 9 ? '34' + p.telefono : p.telefono) : '') + '?text=' + encodeURIComponent(aviso);
+      tarjeta.replaceChildren(
+        el('div', {class:'fila'}, el('div', {class:'circ', style:'width:36px;height:36px;font-size:18px;margin:0'}, '✓'),
+          el('div', {class:'txt'}, el('h4', {}, 'Enviado a ' + p.madre), el('p', {}, 'Ya lo ve en su app, debajo del apoyo.'))),
+        el('a', {class:'btn wa', href:wa, target:'_blank', rel:'noopener', style:'margin-top:12px;text-decoration:none'}, 'Avisar a ' + p.madre + ' por WhatsApp'));
+      const n = Number($('n-pend').textContent) - 1; $('n-pend').textContent = Math.max(n, 0);
+      if (n <= 0) $('todo-hecho').hidden = false;
+    } catch(e){ if (!sinAcceso(e)){ env.disabled = false; err.textContent = 'No se ha podido enviar. Tu comentario sigue aquí: prueba otra vez.'; err.hidden = false; } }
+  };
+  return tarjeta;
+}
+
+async function abrirLaura(id){
+  const w = window.open('', '_blank');
+  try { const r = await srv('verArchivoLaura', LAURA, LLAVE, id); if (w) w.location = r.url; else location.href = r.url; }
+  catch(e){ if (w) w.close(); if (!sinAcceso(e)) alert('No se ha podido abrir.'); }
+}
+$('b-recargar').onclick = cargarLaura;
+
 // ── Arranque ──
 (function(){
   const hoy = new Date(); $('r-fecha').value = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  if (LAURA){
+    $('f-login').querySelector('label').textContent = 'Tu código de Laura';
+    LLAVE = leerLlave(); if (LLAVE) cargarLaura(); else mostrar('login'); return;
+  }
   if (!TOKEN){ mostrar('sinenlace'); return; }
   LLAVE = leerLlave();
   if (LLAVE) cargar(); else mostrar('login');
