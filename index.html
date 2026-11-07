@@ -182,9 +182,9 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
       <h4>Ten la app a mano en tu móvil</h4>
       <div id="inst-ios">
         <ol>
-          <li>Toca el botón de compartir <svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v8h14v-8"/></svg> (abajo o arriba de la pantalla).</li>
-          <li>Baja y toca <b>«Añadir a pantalla de inicio»</b>.</li>
-          <li>Toca <b>«Añadir»</b>. Te saldrá el icono de ConectaTEA junto a tus apps.</li>
+          <li>Toca los <b>tres puntitos •••</b> de abajo a la derecha. Si no los ves, toca el botón de compartir <svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v8h14v-8"/></svg>.</li>
+          <li>Toca <b>«Compartir»</b> y después <b>«Añadir a pantalla de inicio»</b> (está un poco más abajo).</li>
+          <li>Toca <b>«Añadir»</b>. Ya tienes ConectaTEA junto a tus apps: entra siempre desde ahí.</li>
         </ol>
       </div>
       <div id="inst-android" hidden>
@@ -195,6 +195,7 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
         <ol>
           <li>Toca los tres puntitos <b>⋮</b> de arriba a la derecha.</li>
           <li>Toca <b>«Añadir a pantalla de inicio»</b> o <b>«Instalar aplicación»</b>.</li>
+          <li>Si no ves esa opción, toca <b>⋮</b> → <b>«Abrir en Chrome»</b> y repite.</li>
         </ol>
       </div>
     </div>
@@ -286,8 +287,15 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxgjPOSA7_SrD5orRMiR9kKFPjZATme8ic68UuaJM4d3EY39WGGQCBOqB9ZjkDcayoXmg/exec';
 const PARAMS = new URLSearchParams(location.search);
-const TOKEN = (PARAMS.get('f') || '').replace(/[^\w-]/g, '');
-const LAURA = (PARAMS.get('laura') || '').replace(/[^\w-]/g, '');
+// Se recuerda el enlace personal (y si es la pantalla de Laura o la de una madre) para que,
+// al abrir desde el icono de la pantalla de inicio, entre directamente.
+function guardado(k, v){ try{ if (v !== undefined) localStorage.setItem(k, v); return localStorage.getItem(k) || ''; }catch(e){ return v || ''; } }
+const pF = (PARAMS.get('f') || '').replace(/[^\w-]/g, ''), pL = (PARAMS.get('laura') || '').replace(/[^\w-]/g, '');
+if (pL){ guardado('ctea_laura_clave', pL); guardado('ctea_modo', 'laura'); }
+if (pF){ guardado('ctea_token', pF); guardado('ctea_modo', 'madre'); }
+const MODO = pL ? 'laura' : pF ? 'madre' : guardado('ctea_modo');
+const LAURA = MODO === 'laura' ? (pL || guardado('ctea_laura_clave')) : '';
+const TOKEN = MODO === 'madre' ? (pF || guardado('ctea_token')) : '';
 const CLAVE = LAURA ? 'ctea_laura' : 'ctea_' + TOKEN;
 let LLAVE = null, DATOS = null;
 const $ = (id) => document.getElementById(id);
