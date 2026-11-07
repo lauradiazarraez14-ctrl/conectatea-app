@@ -90,7 +90,9 @@ button{cursor:pointer}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--superficie);border:1.5px solid var(--borde);border-radius:8px;padding:4px;margin:4px 0 14px}
 .seg button{border:0;background:transparent;color:var(--apoyo);font-weight:700;font-size:13px;padding:10px 4px;border-radius:5px}
 .seg button[aria-selected="true"]{background:var(--petroleo);color:#fff}
-.escuela{margin-top:20px;background:var(--menta-suave);border-color:var(--menta-suave)}
+.escuela{background:var(--menta-suave);border-color:var(--menta-suave)}
+.tarea-escuela{display:inline-flex;align-items:center;gap:8px;margin-top:8px;text-decoration:none}
+.tarea-escuela img{width:22px;height:22px;border-radius:5px}
 
 .tipo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tipo input{position:absolute;opacity:0}
@@ -225,6 +227,11 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
   <!-- MATERIALES -->
   <section id="v-materiales" hidden>
     <div class="cab"><div><small class="nino"></small><h2>Mis materiales</h2></div></div>
+    <a class="tarjeta fila escuela" id="a-escuela" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;margin:4px 0 14px">
+      <img src="skool.png" alt="" width="44" height="44" style="border-radius:10px;flex:none">
+      <div class="txt"><h4>La Escuela ConectaTEA</h4><p>Los vídeos de cada etapa y las grupales grabadas</p></div>
+      <span class="mini">Entrar</span>
+    </a>
     <div class="seg" role="tablist">
       <button role="tab" data-seg="apoyos" aria-selected="true">Apoyos</button>
       <button role="tab" data-seg="sesiones" aria-selected="false">Sesiones</button>
@@ -241,10 +248,6 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
     <div class="pila" data-panel="sesiones" hidden><div class="pila" id="sesiones"></div>
       <p class="pie" style="text-align:left">Las grupales grabadas están en la Escuela.</p></div>
     <div class="pila" data-panel="informes" hidden id="informes"></div>
-    <div class="tarjeta fila escuela">
-      <div class="txt"><h4>La Escuela ConectaTEA</h4><p>Los vídeos de cada etapa y las grupales grabadas</p></div>
-      <a class="mini" id="a-escuela" target="_blank" rel="noopener" style="text-decoration:none">Ir a la Escuela</a>
-    </div>
   </section>
 </div>
 
@@ -329,7 +332,7 @@ function pintar(){
   if (d.semana){
     s.append(el('div', {class:'semana'}, el('span', {}, d.semana.rango)));
     if (d.semana.nota) s.append(el('div', {class:'nota-laura'}, el('div', {class:'etq etq-laura'}, 'Laura ha leído tu registro'), el('p', {}, d.semana.nota)));
-    if (d.semana.tareas.length) s.append(el('ul', {class:'tareas'}, d.semana.tareas.map(t => el('li', {}, t))));
+    if (d.semana.tareas.length) s.append(el('ul', {class:'tareas'}, d.semana.tareas.map(tarea)));
   } else s.append(el('p', {class:'vacio', style:'margin-top:8px'}, 'Después de tu próxima sesión, Laura te dejará aquí lo que toca trabajar esta semana.'));
 
   $('citas').replaceChildren(...d.citas.map((c, i) => el('div', {class:'tarjeta fila'},
@@ -348,6 +351,15 @@ function pintar(){
       g.video ? el('button', {class:'mini', onclick: () => abrir(g.video, g.titulo, 'VÍDEO')}, 'Ver vídeo') : null,
       g.resumen ? el('button', {class:'mini', onclick: () => abrir(g.resumen, g.titulo, 'DOC')}, 'Leer resumen') : null))) : [el('p', {class:'vacio'}, 'Aquí aparecerán tus sesiones grabadas y sus resúmenes.')]));
   $('informes').replaceChildren(...(m.informes.length ? m.informes.map(a => el('div', {class:'tarjeta'}, archivoFila(a, 'DOC'))) : [el('p', {class:'vacio'}, 'Aquí aparecerán tus informes.')]));
+}
+
+// Si una tarea lleva un enlace de Skool o menciona la Escuela, lleva su botón directo.
+function tarea(t){
+  const m = t.match(/https?:\/\/(www\.)?skool\.com\/\S+/i);
+  const texto = m ? t.replace(m[0], '').replace(/\s+([.,:;])/g, '$1').trim() : t;
+  const url = m ? m[0] : (/escuela/i.test(t) ? DATOS.escuela : null);
+  return el('li', {}, texto, url ? el('br') : null,
+    url ? el('a', {class:'mini tarea-escuela', href:url, target:'_blank', rel:'noopener'}, el('img', {src:'skool.png', alt:''}), 'Ir a la Escuela') : null);
 }
 
 function archivoFila(a, ico){
