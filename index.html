@@ -106,6 +106,11 @@ textarea{min-height:84px}
 .circ{width:64px;height:64px;border-radius:50%;background:var(--verde);color:#fff;display:grid;place-items:center;font-size:30px;font-weight:800;margin:0 auto 14px}
 .ok p{color:var(--apoyo)}
 
+.instalar{background:var(--coral-suave);border:0;position:relative}
+.instalar h4{font-size:16px;font-weight:800;margin:0 28px 6px 0}
+.instalar ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px}
+.instalar svg{width:20px;height:20px;vertical-align:-4px;stroke:var(--verde);fill:none;stroke-width:2}
+.instalar .x{position:absolute;top:10px;right:10px;background:none;border:0;font-size:22px;line-height:1;color:var(--apoyo);padding:4px}
 .visor{position:fixed;inset:0;padding-top:env(safe-area-inset-top,0px);background:var(--fondo);overflow:auto;z-index:10}
 .visor .in{max-width:640px;margin:0 auto;padding:12px 16px 40px}
 .visor .doc{background:var(--superficie);border:1.5px solid var(--borde);border-radius:6px;padding:18px;overflow-wrap:anywhere}
@@ -150,6 +155,27 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
   <!-- MI SEMANA -->
   <section id="v-inicio" hidden>
     <div class="cab"><div><small id="hola"></small><h2 id="nino-edad"></h2></div><div class="avatar" id="inicial"></div></div>
+    <div class="tarjeta instalar" id="instalar" hidden style="margin-bottom:12px">
+      <button class="x" type="button" id="instalar-x" aria-label="Cerrar">×</button>
+      <h4>Ten la app a mano en tu móvil</h4>
+      <div id="inst-ios">
+        <ol>
+          <li>Toca el botón de compartir <svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v8h14v-8"/></svg> (abajo o arriba de la pantalla).</li>
+          <li>Baja y toca <b>«Añadir a pantalla de inicio»</b>.</li>
+          <li>Toca <b>«Añadir»</b>. Te saldrá el icono de ConectaTEA junto a tus apps.</li>
+        </ol>
+      </div>
+      <div id="inst-android" hidden>
+        <p style="margin:0 0 10px">Ponla en tu pantalla de inicio y entra con un toque, como cualquier app.</p>
+        <button class="btn btn-prim" type="button" id="b-instalar">Añadir a mi móvil</button>
+      </div>
+      <div id="inst-android-manual" hidden>
+        <ol>
+          <li>Toca los tres puntitos <b>⋮</b> de arriba a la derecha.</li>
+          <li>Toca <b>«Añadir a pantalla de inicio»</b> o <b>«Instalar aplicación»</b>.</li>
+        </ol>
+      </div>
+    </div>
     <div class="pila">
       <div class="tarjeta" id="semana"></div>
       <div class="seccion-tit">Próximas citas</div>
@@ -287,7 +313,7 @@ async function cargar(){
   $('v-cargando').hidden = false;
   try { DATOS = await srv('cargar', TOKEN, LLAVE); }
   catch(e){ if (!sinAcceso(e)){ $('v-cargando').textContent = 'No se ha podido cargar. Cierra y vuelve a abrir.'; } return; }
-  pintar(); mostrar('inicio');
+  pintar(); pintarInstalar(); mostrar('inicio');
 }
 
 // ── Pintar ──
@@ -427,6 +453,24 @@ document.querySelectorAll('[data-seg]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-seg]').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
   document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== b.dataset.seg);
 });
+
+
+// ── Añadir a la pantalla de inicio ──
+let avisoInstalar = null;
+const yaInstalada = () => window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const esMovil = esIOS || /android/i.test(navigator.userAgent);
+function cerradoInstalar(){ try{ return localStorage.getItem('ctea_inst_cerrado') === '1'; }catch(e){ return false; } }
+function pintarInstalar(){
+  const ver = esMovil && !yaInstalada() && !cerradoInstalar();
+  $('instalar').hidden = !ver; if (!ver) return;
+  $('inst-ios').hidden = !esIOS;
+  $('inst-android').hidden = esIOS || !avisoInstalar;
+  $('inst-android-manual').hidden = esIOS || !!avisoInstalar;
+}
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); avisoInstalar = e; pintarInstalar(); });
+$('b-instalar').onclick = async () => { if (!avisoInstalar) return; avisoInstalar.prompt(); await avisoInstalar.userChoice; avisoInstalar = null; pintarInstalar(); };
+$('instalar-x').onclick = () => { try{ localStorage.setItem('ctea_inst_cerrado', '1'); }catch(e){} $('instalar').hidden = true; };
 
 // ── Arranque ──
 (function(){
