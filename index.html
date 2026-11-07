@@ -13,7 +13,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="logo-180.png">
 <link rel="icon" href="logo-192.png">
-<link rel="manifest" href="manifest.webmanifest">
+<script>
+  // El manifiesto solo para Android: en iPhone hace que el icono abra sin el enlace personal.
+  // Sin él, el iPhone guarda la dirección exacta (con el enlace de la madre) al añadir a inicio.
+  (function(){
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!ios){ var l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.appendChild(l); }
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <style>
