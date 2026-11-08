@@ -164,6 +164,13 @@ nav.tabs button[aria-current="page"] b{background:var(--coral)}
 .barra .in{max-width:440px;margin:0 auto;display:flex;justify-content:center;align-items:center}
 .barra img{width:84px;height:auto;display:block}
 body.con-barra .app{padding-top:0}
+
+/* Marco: la app dentro de un rectángulo con esquinas redondeadas, como la opción 9 */
+body.con-barra{background:#EAF0EF}
+body.con-barra .barra,body.con-barra .app{width:calc(100% - 20px);max-width:440px;margin-left:auto;margin-right:auto;box-sizing:border-box}
+body.con-barra .barra{margin-top:calc(env(safe-area-inset-top,0px) + 10px);padding:14px 16px;border-radius:24px 24px 0 0}
+body.con-barra .app{background:var(--fondo);border-radius:0 0 24px 24px;border:1px solid rgba(10,119,126,.10);border-top:0;padding-bottom:18px;margin-bottom:96px;min-height:calc(100vh - 230px)}
+@media (prefers-color-scheme: dark){body.con-barra{background:#071012}}
 </style>
 </head>
 <body>
