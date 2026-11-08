@@ -326,7 +326,7 @@ nav.tabs button b{width:52px!important}
       <div class="pila" id="apoyos-suyos"></div>
     </div>
     <div class="pila" data-panel="sesiones" hidden><div class="pila" id="sesiones"></div>
-      <p class="pie" style="text-align:left">Las grupales grabadas están en la Escuela.</p></div>
+      <p class="pie" style="text-align:left">Las grupales están en la pestaña Escuela.</p></div>
     <div class="pila" data-panel="informes" hidden id="informes"></div>
   </section>
 </div>
@@ -436,7 +436,7 @@ function pintar(){
   $('esc-semana').hidden = !conEscuela.length;
   $('esc-lista').replaceChildren(...conEscuela.map(t => el('div', {class:'tarjeta'}, el('ul', {class:'tareas'}, tarea(t)))));
   const m = d.materiales;
-  $('apoyos-laura').replaceChildren(...(m.laura.length ? m.laura.map(apoyoLaura) : [el('p', {class:'vacio'}, 'Aquí aparecerán los apoyos que te prepare Laura.')]));
+  $('apoyos-laura').replaceChildren(...(m.laura.length ? m.laura.map(apoyoLaura) : [el('p', {class:'vacio'}, 'Todavía no hay apoyos.')]));
   $('apoyos-suyos').replaceChildren(...m.suyos.map(a => el('div', {class:'tarjeta'},
     archivoFila(a, 'FOTO'),
     el('p', {class:'linea'}, ...(a.respuesta ? [el('strong', {}, 'Laura: '), a.respuesta] : ['Lo has subido tú. Laura lo está revisando.'])))));
@@ -444,8 +444,8 @@ function pintar(){
     el('div', {class:'fila'}, el('div', {class:'ico'}, 'SES'), el('div', {class:'txt'}, el('h4', {}, g.titulo), el('p', {}, g.fecha || ''))),
     el('div', {class:'dos'},
       g.video ? el('button', {class:'mini', onclick: () => abrir(g.video, g.titulo, 'VÍDEO')}, 'Ver vídeo') : null,
-      g.resumen ? el('button', {class:'mini', onclick: () => abrir(g.resumen, g.titulo, 'DOC')}, 'Leer resumen') : null))) : [el('p', {class:'vacio'}, 'Aquí aparecerán tus sesiones grabadas y sus resúmenes.')]));
-  $('informes').replaceChildren(...(m.informes.length ? m.informes.map(a => el('div', {class:'tarjeta'}, archivoFila(a, 'DOC'))) : [el('p', {class:'vacio'}, 'Aquí aparecerán tus informes.')]));
+      g.resumen ? el('button', {class:'mini', onclick: () => abrir(g.resumen, g.titulo, 'DOC')}, 'Leer resumen') : null))) : [el('p', {class:'vacio'}, 'Todavía no hay sesiones.')]));
+  $('informes').replaceChildren(...(m.informes.length ? m.informes.map(a => el('div', {class:'tarjeta'}, archivoFila(a, 'DOC'))) : [el('p', {class:'vacio'}, 'Todavía no hay informes.')]));
 }
 
 // Si una tarea lleva un enlace de Skool o menciona la Escuela, lleva su botón directo.
