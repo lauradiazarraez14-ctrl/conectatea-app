@@ -25,15 +25,17 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
-  --fondo:#F4F9F9; --superficie:#FFFFFF; --borde:#D5E7E7;
+  --fondo:#FFF9F6; --superficie:#FFFFFF; --borde:#D5E7E7;
   --texto:#14313A; --apoyo:#47626A; --tenue:#667D84;
-  --marca:#0A777E; --petroleo:#0A777E; --verde:#0A777E; --menta:#D6F3F1; --menta-suave:#E5F3F3; --coral:#F28C6B; --coral-suave:#FDEEE8;
+  --marca:#0A777E; --petroleo:#0A777E; --verde:#0A777E; --menta:#D6F3F1; --menta-suave:#E7F3F2; --coral:#F28C6B; --coral-suave:#FDEAE2;
+  --turq-pastel:#D3EAE8; --turq-pastel-txt:#285C5E; --teja-pastel:#FCE1D6; --teja-txt:#8A452F;
   --font:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif; color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root{
   --fondo:#0B1718; --superficie:#122426; --borde:#21403F;
   --texto:#E6F2F2; --apoyo:#AFC6C6; --tenue:#8DA7A8;
-  --marca:#0A777E; --petroleo:#0A6A70; --verde:#5CC8C4; --menta:#D6F3F1; --menta-suave:#123334; --coral:#F5A083; --coral-suave:#3A2620; color-scheme:dark}}
+  --marca:#0A777E; --petroleo:#0A6A70; --verde:#5CC8C4; --menta:#D6F3F1; --menta-suave:#123334; --coral:#F5A083; --coral-suave:#3A2620;
+  --turq-pastel:#16393A; --turq-pastel-txt:#9FDCD7; --teja-pastel:#3D2A23; --teja-txt:#F5B9A3; color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{background:var(--fondo);color:var(--texto);font-family:var(--font);font-size:15px;line-height:1.45}
@@ -139,6 +141,25 @@ nav.tabs button b{display:block;width:26px;height:4px;border-radius:2px}
 nav.tabs button[aria-current="page"]{color:var(--verde)}
 nav.tabs button[aria-current="page"] b{background:var(--verde)}
 nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ── Paleta final: turquesa del logo como principal + turquesa pastel y teja suave intercalados ── */
+.semana span{background:var(--turq-pastel);color:var(--turq-pastel-txt)}
+.avatar{background:var(--teja-pastel);color:var(--teja-txt)}
+.nota-laura{background:var(--coral-suave)}
+.ico{background:var(--turq-pastel);color:var(--turq-pastel-txt)}
+.ico.c{background:var(--teja-pastel);color:var(--teja-txt)}
+.mini{background:var(--turq-pastel);color:var(--turq-pastel-txt);border-color:transparent}
+.btn-sec{background:var(--teja-pastel);color:var(--teja-txt);border:0}
+.escuela{background:var(--turq-pastel);border-color:transparent}
+.escuela .mini{background:var(--superficie)}
+.tipo input:checked+label{background:var(--turq-pastel);color:var(--turq-pastel-txt);border-color:var(--marca)}
+.dictado{background:var(--teja-pastel);color:var(--teja-txt)}
+.seg button[aria-selected="true"]{background:var(--marca);color:#fff}
+nav.tabs button[aria-current="page"]{color:var(--marca)}
+nav.tabs button[aria-current="page"] b{background:var(--coral)}
+.tareas li::before{background:var(--coral)}
+.enlace{color:var(--teja-txt)}
+.linea strong{color:var(--marca)}
 </style>
 </head>
 <body>
