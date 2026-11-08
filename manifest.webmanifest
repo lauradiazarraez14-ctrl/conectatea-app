@@ -2,8 +2,8 @@
   "name": "Tu espacio ConectaTEA",
   "short_name": "ConectaTEA",
   "display": "standalone",
-  "background_color": "#F4F8F8",
-  "theme_color": "#114F4D",
+  "background_color": "#0A777E",
+  "theme_color": "#0A777E",
   "lang": "es",
   "icons": [
     {

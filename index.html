@@ -6,7 +6,7 @@
 <title>ConectaTEA</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#114F4D">
+<meta name="theme-color" content="#0A777E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ConectaTEA">
@@ -25,15 +25,15 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
-  --fondo:#F4F8F8; --superficie:#FFFFFF; --borde:#DCE7E6;
-  --texto:#0F172A; --apoyo:#475569; --tenue:#64748B;
-  --petroleo:#114F4D; --verde:#178F87; --menta:#5EEAD4; --menta-suave:#E6FAF6; --coral:#F28C6B; --coral-suave:#FDEEE8;
+  --fondo:#F4F9F9; --superficie:#FFFFFF; --borde:#D5E7E7;
+  --texto:#14313A; --apoyo:#47626A; --tenue:#667D84;
+  --marca:#0A777E; --petroleo:#0A777E; --verde:#0A777E; --menta:#D6F3F1; --menta-suave:#E5F3F3; --coral:#F28C6B; --coral-suave:#FDEEE8;
   --font:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif; color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root{
-  --fondo:#0C1716; --superficie:#132423; --borde:#24403E;
-  --texto:#E8F2F1; --apoyo:#AFC3C1; --tenue:#8FA6A4;
-  --petroleo:#0E3D3B; --verde:#3BB5AC; --menta-suave:#123331; --coral:#F5A083; --coral-suave:#3A2620; color-scheme:dark}}
+  --fondo:#0B1718; --superficie:#122426; --borde:#21403F;
+  --texto:#E6F2F2; --apoyo:#AFC6C6; --tenue:#8DA7A8;
+  --marca:#0A777E; --petroleo:#0A6A70; --verde:#5CC8C4; --menta:#D6F3F1; --menta-suave:#123334; --coral:#F5A083; --coral-suave:#3A2620; color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{background:var(--fondo);color:var(--texto);font-family:var(--font);font-size:15px;line-height:1.45}
@@ -45,33 +45,31 @@ button{cursor:pointer}
 [hidden]{display:none!important}
 
 .login{min-height:92vh;display:flex;flex-direction:column;justify-content:center;gap:24px;padding-block:24px}
-.hero{position:relative;overflow:hidden;background:var(--petroleo);color:#fff;border-radius:10px;padding:30px 24px 28px}
-.hero::before,.hero::after{content:"";position:absolute;border-radius:50%;pointer-events:none}
-.hero::before{width:220px;height:220px;right:-90px;top:-100px;background:var(--verde);opacity:.55}
-.hero::after{width:100px;height:100px;right:10px;top:56px;border:3px solid var(--menta);opacity:.6}
+.hero{background:var(--marca);color:#fff;border-radius:16px;padding:34px 24px 30px;text-align:center}
+.hero img{display:block;width:78%;max-width:300px;height:auto;margin:0 auto}
 .hero h1{position:relative;font-size:34px;font-weight:800;line-height:1.05;letter-spacing:-.5px}
 .hero h1 span{display:block;color:var(--menta)}
 .hero h1 em{font-style:normal;color:var(--coral)}
-.hero p{position:relative;margin:14px 0 0;color:#CFE7E4;font-size:16px;font-weight:500;max-width:230px}
-.codigo{width:100%;text-align:center;font-size:28px;font-weight:800;letter-spacing:12px;padding:14px;border:1.5px solid var(--borde);border-radius:6px;background:var(--superficie);color:var(--texto)}
+.hero p{margin:18px auto 0;color:rgba(255,255,255,.9);font-size:16px;font-weight:500;max-width:260px}
+.codigo{width:100%;text-align:center;font-size:28px;font-weight:700;letter-spacing:12px;padding:14px;border:1.5px solid var(--borde);border-radius:12px;background:var(--superficie);color:var(--texto)}
 .error{color:#B4532F;font-weight:600;font-size:14px;text-align:center;margin:0}
 .pie{font-size:13px;color:var(--tenue);text-align:center;margin:0}
 
-.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;border:0;border-radius:6px;font-weight:700;font-size:16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;border:0;border-radius:12px;font-weight:700;font-size:16px}
 .btn-prim{background:var(--petroleo);color:#fff}
 .btn-sec{background:transparent;color:var(--verde);border:1.5px solid var(--verde)}
 .btn[disabled]{opacity:.6}
 
 .cab{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:18px 8px}
 .cab small{display:block;color:var(--tenue);font-weight:600;font-size:13px}
-.cab h2{font-size:22px;font-weight:800}
-.avatar{width:42px;height:42px;border-radius:50%;background:var(--petroleo);color:var(--menta);display:grid;place-items:center;font-weight:800;flex:none}
+.cab h2{font-size:22px;font-weight:700;letter-spacing:-.2px}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--marca);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
 .pila{display:flex;flex-direction:column;gap:12px}
-.tarjeta{background:var(--superficie);border:1.5px solid var(--borde);border-radius:6px;padding:16px}
+.tarjeta{background:var(--superficie);border:1px solid var(--borde);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(10,119,126,.06)}
 .etq{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--verde)}
 .semana{margin:8px 0 14px}
-.semana span{display:inline-block;background:var(--petroleo);color:var(--menta);font-weight:800;font-size:15px;padding:8px 12px;border-radius:4px}
-.nota-laura{background:var(--menta-suave);border-radius:6px;padding:12px 14px;margin-bottom:14px}
+.semana span{display:inline-block;background:var(--marca);color:#fff;font-weight:700;font-size:15px;padding:8px 14px;border-radius:999px}
+.nota-laura{background:var(--menta-suave);border-radius:12px;padding:12px 14px;margin-bottom:14px}
 .etq-laura{color:var(--petroleo)}
 @media (prefers-color-scheme: dark){.etq-laura{color:var(--menta)}}
 .nota-laura p{margin:4px 0 0;font-size:14px;white-space:pre-line}
@@ -84,9 +82,9 @@ button{cursor:pointer}
 .fila .txt{flex:1;min-width:0}
 .fila h4{font-size:15px;font-weight:700;overflow-wrap:anywhere}
 .fila p{margin:2px 0 0;font-size:13px;color:var(--tenue)}
-.ico{width:44px;height:44px;border-radius:6px;display:grid;place-items:center;font-weight:800;font-size:11px;flex:none;background:var(--menta-suave);color:var(--verde);text-align:center;line-height:1.1}
+.ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:11px;flex:none;background:var(--menta-suave);color:var(--verde);text-align:center;line-height:1.1}
 .ico.c{background:var(--coral-suave);color:#B4532F}
-.mini{font-size:13px;font-weight:700;color:var(--verde);background:none;border:1.5px solid var(--borde);border-radius:4px;padding:6px 10px}
+.mini{font-size:13px;font-weight:700;color:var(--verde);background:none;border:1.5px solid var(--borde);border-radius:999px;padding:7px 14px}
 .enlace{background:none;border:0;padding:0;margin-top:10px;font-size:13px;font-weight:700;color:var(--verde);text-decoration:underline}
 .nuevo{display:inline-block;margin-left:6px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:var(--coral);color:#0F172A;padding:2px 6px;border-radius:3px;vertical-align:middle}
 .linea{margin:10px 0 0;font-size:14px;color:var(--apoyo);border-top:1px solid var(--borde);padding-top:10px}
@@ -94,23 +92,23 @@ button{cursor:pointer}
 .dos{display:flex;gap:8px;margin-top:12px}
 .dos .mini{flex:1;padding:10px}
 .pide{margin-top:12px;display:flex;flex-direction:column;gap:8px}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--superficie);border:1.5px solid var(--borde);border-radius:8px;padding:4px;margin:4px 0 14px}
-.seg button{border:0;background:transparent;color:var(--apoyo);font-weight:700;font-size:13px;padding:10px 4px;border-radius:5px}
-.seg button[aria-selected="true"]{background:var(--petroleo);color:#fff}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--superficie);border:1px solid var(--borde);border-radius:999px;padding:4px;margin:4px 0 14px}
+.seg button{border:0;background:transparent;color:var(--apoyo);font-weight:700;font-size:13px;padding:10px 4px;border-radius:999px}
+.seg button[aria-selected="true"]{background:var(--marca);color:#fff}
 .escuela{background:var(--menta-suave);border-color:var(--menta-suave)}
 .tarea-escuela{display:inline-flex;align-items:center;gap:8px;margin-top:8px;text-decoration:none}
 .tarea-escuela img{width:22px;height:22px;border-radius:5px}
 
 .tipo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tipo input{position:absolute;opacity:0}
-.tipo label{display:flex;align-items:center;justify-content:center;min-height:50px;border:1.5px solid var(--borde);border-radius:6px;background:var(--superficie);font-weight:700;cursor:pointer;text-align:center;padding:8px}
+.tipo label{display:flex;align-items:center;justify-content:center;min-height:50px;border:1.5px solid var(--borde);border-radius:12px;background:var(--superficie);font-weight:700;cursor:pointer;text-align:center;padding:8px}
 .tipo input:checked+label{border-color:var(--verde);background:var(--menta-suave);color:var(--verde)}
 .campo{display:flex;flex-direction:column;gap:6px}
 .campo>label{font-weight:700}
 .ayuda{font-size:13px;color:var(--tenue);margin-top:-4px}
-textarea,input[type=date]{width:100%;border:1.5px solid var(--borde);border-radius:6px;background:var(--superficie);color:var(--texto);padding:12px;resize:vertical}
+textarea,input[type=date]{width:100%;border:1.5px solid var(--borde);border-radius:12px;background:var(--superficie);color:var(--texto);padding:12px;resize:vertical}
 textarea{min-height:84px}
-.dictado{font-size:13px;color:var(--apoyo);background:var(--menta-suave);padding:10px 12px;border-radius:4px}
+.dictado{font-size:13px;color:var(--apoyo);background:var(--menta-suave);padding:10px 14px;border-radius:12px}
 .ok{text-align:center;padding:28px 16px}
 .circ{width:64px;height:64px;border-radius:50%;background:var(--verde);color:#fff;display:grid;place-items:center;font-size:30px;font-weight:800;margin:0 auto 14px}
 .ok p{color:var(--apoyo)}
@@ -149,8 +147,8 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
   <!-- ENTRADA -->
   <section id="v-login" class="login" hidden>
     <div class="hero">
-      <h1>Tu espacio<span>Conecta<em>TEA</em></span></h1>
-      <p>Todo lo que necesitas para ayudar a tu hijo.</p>
+      <img src="logo-completo.png" alt="ConectaTEA" width="640" height="293">
+      <p>Tu espacio. Todo lo que necesitas para ayudar a tu hijo.</p>
     </div>
     <form id="f-login" class="pila">
       <label class="pie" for="codigo" style="font-size:15px;color:var(--apoyo)">Escribe tu código de 4 números</label>
@@ -162,7 +160,7 @@ nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2
   </section>
 
   <section id="v-sinenlace" class="login" hidden>
-    <div class="hero"><h1>Tu espacio<span>Conecta<em>TEA</em></span></h1></div>
+    <div class="hero"><img src="logo-completo.png" alt="ConectaTEA" width="640" height="293"></div>
     <p class="pie" style="font-size:16px">Abre la app desde el enlace que te hemos mandado por WhatsApp.</p>
   </section>
 
