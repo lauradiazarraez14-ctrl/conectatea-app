@@ -238,9 +238,10 @@ nav.tabs button b{width:52px!important}
       <div class="pila" id="pautas"></div>
       <div class="tarjeta" id="aviso-wa" hidden>
         <div class="etq">Ya están todas publicadas</div>
-        <p style="margin:8px 0">Manda este aviso a las madres por tu lista de difusión de WhatsApp:</p>
-        <p class="cita" id="aviso-txt">Ya tienes en tu espacio ConectaTEA lo que te toca esta semana 💛 Entra cuando tengas un rato.</p>
-        <button class="btn btn-sec" type="button" id="b-copiar">Copiar el aviso</button>
+        <p style="margin:8px 0">Avisa a las madres en «Comunicados oficiales» del grupo de Telegram. Saldrá este mensaje:</p>
+        <p class="cita" id="aviso-txt">Buenas, familias 💛 Ya tenéis en vuestro espacio ConectaTEA lo que os toca esta semana. Entrad cuando tengáis un rato.</p>
+        <p class="error" id="aviso-err" hidden></p>
+        <button class="btn btn-prim" type="button" id="b-avisar">Avisar en el grupo de Telegram</button>
       </div>
     </div>
     <div class="seccion-tit">Apoyos por revisar · <span id="n-pend">0</span></div>
@@ -740,12 +741,14 @@ async function abrirLaura(id){
   catch(e){ if (w) w.close(); if (!sinAcceso(e)) alert('No se ha podido abrir.'); }
 }
 $('b-recargar').onclick = cargarLaura;
-$('b-copiar').onclick = async () => {
-  const txt = $('aviso-txt').textContent;
-  try { await navigator.clipboard.writeText(txt); $('b-copiar').textContent = 'Copiado ✓'; }
-  catch(e){ const r = document.createRange(); r.selectNodeContents($('aviso-txt')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+$('b-avisar').onclick = async () => {
+  const b = $('b-avisar'); b.disabled = true; $('aviso-err').hidden = true;
+  try {
+    const r = await srv('avisarGrupo', LAURA, LLAVE);
+    if (r.ok){ b.textContent = r.prueba ? 'Prueba: te ha llegado a ti por Telegram ✓' : 'Avisado en el grupo ✓'; }
+    else { $('aviso-err').textContent = r.msg; $('aviso-err').hidden = false; b.disabled = false; }
+  } catch(e){ if (!sinAcceso(e)){ b.disabled = false; $('aviso-err').textContent = sinRed(e) ? 'Sin conexión. Prueba cuando tengas cobertura.' : 'No se ha podido avisar. Prueba otra vez.'; $('aviso-err').hidden = false; } }
 };
-
 // ── Sin conexión: guardar la app en el móvil ──
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
