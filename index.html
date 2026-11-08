@@ -269,6 +269,7 @@ nav.tabs button b{width:52px!important}
       <div class="tarjeta" id="semana"></div>
       <div class="seccion-tit">Próximas citas</div>
       <div class="pila" id="citas"></div>
+      <button class="enlace" type="button" id="b-privacidad" style="align-self:center;margin-top:18px;color:var(--tenue)">Privacidad</button>
     </div>
   </section>
 
@@ -536,6 +537,14 @@ async function abrir(id, titulo, tipo){
   } catch(e){ if (!sinAcceso(e)) $('visor-cont').replaceChildren(el('p', {class:'vacio'}, sinRed(e) ? 'Sin conexión. Ábrelo cuando tengas cobertura.' : 'No se ha podido abrir. Prueba otra vez.')); }
 }
 $('b-cerrar').onclick = () => $('visor').hidden = true;
+const PRIVACIDAD = `<p>Esta app es solo tuya. Aquí está lo de tu hijo: tu registro, sus apoyos, las sesiones y los informes. Nadie más de ConectaTEA ve tu espacio, salvo Laura y el equipo que te acompaña, que guardan secreto profesional.</p>
+<p><b>Quién es responsable:</b> Laura Díaz Arráez (ConectaTEA).</p>
+<p><b>Para qué se usa lo que escribes:</b> solo para acompañarte a ti y a tu hijo en el programa. Nunca se vende ni se cede a nadie.</p>
+<p><b>Dónde se guarda:</b> en Google Workspace, en servidores protegidos y con acuerdo de protección de datos. Lo que escribes sin conexión se queda en tu móvil hasta que se envía.</p>
+<p><b>Cuánto tiempo:</b> mientras estés en el programa y 2 años después, por si vuelves. Puedes pedir que se borre antes.</p>
+<p><b>Tus derechos:</b> puedes ver, corregir o borrar tus datos y los de tu hijo, o retirar tu permiso, cuando quieras. Escríbenos a laura@familiasconectatea.com.</p>
+<p><b>Un consejo:</b> tu enlace y tu código son como una llave. No los compartas. Si cambias de móvil o crees que alguien los tiene, avísanos y te damos unos nuevos.</p>`;
+$('b-privacidad').onclick = () => { $('visor-tit').textContent = 'Tu privacidad'; const d = el('div', {class:'doc'}); d.innerHTML = PRIVACIDAD; $('visor-cont').replaceChildren(d); $('visor').hidden = false; };
 $('b-ver-registro').onclick = async () => {
   $('visor-tit').textContent = 'Tu registro'; $('visor-cont').replaceChildren(el('div', {class:'cargando'}, 'Abriendo…'));
   $('visor').hidden = false;
