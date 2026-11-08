@@ -541,7 +541,7 @@ const PRIVACIDAD = `<p>Esta app es solo tuya. Aquí está lo de tu hijo: tu regi
 <p><b>Quién es responsable:</b> Laura Díaz Arráez (ConectaTEA).</p>
 <p><b>Para qué se usa lo que escribes:</b> solo para acompañarte a ti y a tu hijo en el programa. Nunca se vende ni se cede a nadie.</p>
 <p><b>Dónde se guarda:</b> en Google Workspace, en servidores protegidos y con acuerdo de protección de datos. Lo que escribes sin conexión se queda en tu móvil hasta que se envía.</p>
-<p><b>Cuánto tiempo:</b> mientras estés en el programa y 2 años después, por si vuelves. Puedes pedir que se borre antes.</p>
+<p><b>Cuánto tiempo:</b> solo mientras estés en el programa. Al terminar, en el mes siguiente se borra todo. Si quieres guardarte algo, pídenos una copia antes.</p>
 <p><b>Tus derechos:</b> puedes ver, corregir o borrar tus datos y los de tu hijo, o retirar tu permiso, cuando quieras. Escríbenos a laura@familiasconectatea.com.</p>
 <p><b>Un consejo:</b> tu enlace y tu código son como una llave. No los compartas. Si cambias de móvil o crees que alguien los tiene, avísanos y te damos unos nuevos.</p>`;
 $('b-privacidad').onclick = () => { $('visor-tit').textContent = 'Tu privacidad'; const d = el('div', {class:'doc'}); d.innerHTML = PRIVACIDAD; $('visor-cont').replaceChildren(d); $('visor').hidden = false; };
