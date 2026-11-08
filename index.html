@@ -160,9 +160,14 @@ nav.tabs button[aria-current="page"] b{background:var(--coral)}
 .tareas li::before{background:var(--coral)}
 .enlace{color:var(--teja-txt)}
 .linea strong{color:var(--marca)}
+.barra{background:var(--marca);padding:calc(env(safe-area-inset-top,0px) + 10px) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.barra .in{max-width:440px;margin:0 auto;display:flex;align-items:center}
+.barra img{height:38px;width:auto;display:block}
+body.con-barra .app{padding-top:0}
 </style>
 </head>
 <body>
+<header class="barra" id="barra" hidden><div class="in"><img src="logo-blanco.png" alt="ConectaTEA" width="83" height="38"></div></header>
 <div class="app">
 
   <!-- ENTRADA -->
@@ -351,6 +356,8 @@ function mostrar(v){
   ['login','sinenlace','inicio','registro','materiales','laura'].forEach(n => $('v-' + n).hidden = n !== v);
   $('v-cargando').hidden = true;
   $('tabs').hidden = !['inicio','registro','materiales'].includes(v);
+  const barra = ['inicio','registro','materiales','laura'].includes(v);
+  $('barra').hidden = !barra; document.body.classList.toggle('con-barra', barra);
   document.querySelectorAll('#tabs button').forEach(b => b.dataset.ir === v ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
   if (v === 'registro'){ $('f-reg').hidden = false; $('reg-ok').hidden = true; }
   window.scrollTo(0, 0);
