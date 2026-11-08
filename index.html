@@ -663,17 +663,18 @@ const hace = (ms) => { const m = Math.round((Date.now() - ms) / 6e4); return m <
 async function cargarLaura(){
   $('v-cargando').hidden = false;
   let lista;
-  try { [lista, BORR] = await Promise.all([srv('pendientes', LAURA, LLAVE), srv('borradores', LAURA, LLAVE)]); }
+  try { let b; [lista, b] = await Promise.all([srv('pendientes', LAURA, LLAVE), srv('borradores', LAURA, LLAVE)]); BORR = b.lista; FALTA_AVISO = b.faltaAviso; }
   catch(e){ if (!sinAcceso(e)) $('v-cargando').textContent = sinRed(e) ? 'Sin conexión. Abre tu pantalla cuando tengas cobertura.' : 'No se ha podido cargar. Cierra y vuelve a abrir.'; return; }
   pintarLaura(lista); pintarPautas(); mostrar('laura');
 }
 
-let BORR = [], PUBLICADAS = 0;
+let BORR = [], PUBLICADAS = 0, FALTA_AVISO = false;
 const ORIGENES = [['grupal','De la grupal del jueves'],['registro','Laura ha leído tu registro'],['sesion','De tu sesión con Laura']];
 function pintarPautas(){
-  $('pautas-bloque').hidden = !BORR.length && !PUBLICADAS;
+  const avisar = (PUBLICADAS || FALTA_AVISO) && !BORR.length;
+  $('pautas-bloque').hidden = !BORR.length && !avisar;
   $('n-pautas').textContent = BORR.length;
-  $('aviso-wa').hidden = !(PUBLICADAS && !BORR.length);
+  $('aviso-wa').hidden = !avisar;
   $('pautas').replaceChildren(...BORR.map(tarjetaPauta));
 }
 function tarjetaPauta(p){
