@@ -181,6 +181,8 @@ nav.tabs button b{width:64px!important;height:4px;border-radius:3px}
 nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
 nav.tabs button b{width:52px!important}
 .sinred{position:sticky;top:0;z-index:20;background:var(--teja-pastel);color:var(--teja-txt);font-size:13px;font-weight:600;text-align:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 8px}
+.pauta select{width:100%;border:1.5px solid var(--borde);border-radius:12px;background:var(--superficie);color:var(--texto);padding:10px;font:inherit;font-size:15px}
+.pauta textarea{min-height:90px}
 </style>
 </head>
 <body>
@@ -231,7 +233,17 @@ nav.tabs button b{width:52px!important}
   <!-- PANTALLA DE LAURA -->
   <section id="v-laura" hidden>
     <div class="cab"><div><small>Tu pantalla</small><h2>Hola, Laura</h2></div><div class="avatar">L</div></div>
-    <div class="seccion-tit" style="margin-top:4px">Por revisar · <span id="n-pend">0</span></div>
+    <div id="pautas-bloque" hidden>
+      <div class="seccion-tit" style="margin-top:4px">Pautas de esta semana · <span id="n-pautas">0</span></div>
+      <div class="pila" id="pautas"></div>
+      <div class="tarjeta" id="aviso-wa" hidden>
+        <div class="etq">Ya están todas publicadas</div>
+        <p style="margin:8px 0">Manda este aviso a las madres por tu lista de difusión de WhatsApp:</p>
+        <p class="cita" id="aviso-txt">Ya tienes en tu espacio ConectaTEA lo que te toca esta semana 💛 Entra cuando tengas un rato.</p>
+        <button class="btn btn-sec" type="button" id="b-copiar">Copiar el aviso</button>
+      </div>
+    </div>
+    <div class="seccion-tit">Apoyos por revisar · <span id="n-pend">0</span></div>
     <div class="pila" id="pendientes"></div>
     <div class="tarjeta ok" id="todo-hecho" hidden>
       <div class="circ">✓</div><h3>Todo revisado</h3>
@@ -452,7 +464,7 @@ function pintar(){
   const s = $('semana'); s.replaceChildren(el('div', {class:'etq'}, 'Lo que te toca esta semana'));
   if (d.semana){
     s.append(el('div', {class:'semana'}, el('span', {}, d.semana.rango)));
-    if (d.semana.nota) s.append(el('div', {class:'nota-laura'}, el('div', {class:'etq etq-laura'}, 'Laura ha leído tu registro'), el('p', {}, d.semana.nota)));
+    if (d.semana.nota) s.append(el('div', {class:'nota-laura'}, el('div', {class:'etq etq-laura'}, d.semana.etiqueta || 'Laura ha leído tu registro'), el('p', {}, d.semana.nota)));
     if (d.semana.tareas.length) s.append(el('ul', {class:'tareas'}, d.semana.tareas.map(tarea)));
   } else s.append(el('p', {class:'vacio', style:'margin-top:8px'}, 'Después de tu próxima sesión, Laura te dejará aquí lo que toca trabajar esta semana.'));
 
@@ -650,9 +662,38 @@ const hace = (ms) => { const m = Math.round((Date.now() - ms) / 6e4); return m <
 async function cargarLaura(){
   $('v-cargando').hidden = false;
   let lista;
-  try { lista = await srv('pendientes', LAURA, LLAVE); }
+  try { [lista, BORR] = await Promise.all([srv('pendientes', LAURA, LLAVE), srv('borradores', LAURA, LLAVE)]); }
   catch(e){ if (!sinAcceso(e)) $('v-cargando').textContent = sinRed(e) ? 'Sin conexión. Abre tu pantalla cuando tengas cobertura.' : 'No se ha podido cargar. Cierra y vuelve a abrir.'; return; }
-  pintarLaura(lista); mostrar('laura');
+  pintarLaura(lista); pintarPautas(); mostrar('laura');
+}
+
+let BORR = [], PUBLICADAS = 0;
+const ORIGENES = [['grupal','De la grupal del jueves'],['registro','Laura ha leído tu registro'],['sesion','De tu sesión con Laura']];
+function pintarPautas(){
+  $('pautas-bloque').hidden = !BORR.length && !PUBLICADAS;
+  $('n-pautas').textContent = BORR.length;
+  $('aviso-wa').hidden = !(PUBLICADAS && !BORR.length);
+  $('pautas').replaceChildren(...BORR.map(tarjetaPauta));
+}
+function tarjetaPauta(p){
+  const sel = el('select', {'aria-label':'Título'}, ...ORIGENES.map(([v, t]) => { const o = el('option', {value:v}, t); if (v === p.origen) o.selected = true; return o; }));
+  const nota = el('textarea', {'aria-label':'Comentario'}); nota.value = p.nota;
+  const tareas = el('textarea', {'aria-label':'Tareas'}); tareas.value = p.tareas;
+  const err = el('p', {class:'error', hidden:''});
+  const btn = el('button', {class:'btn btn-prim', type:'button'}, 'Publicar en su app');
+  const t = el('div', {class:'tarjeta pauta pila'},
+    el('div', {class:'fila'}, el('div', {class:'ico'}, 'SEM'), el('div', {class:'txt'}, el('h4', {}, p.madre + (p.nino ? ' · ' + p.nino : '')), el('p', {}, 'Revisa y cambia lo que quieras'))),
+    el('label', {class:'mini-lbl'}, 'Título'), sel,
+    el('label', {class:'mini-lbl'}, 'Tu comentario (si lo dejas vacío, no sale)'), nota,
+    el('label', {class:'mini-lbl'}, 'Tareas (una por línea)'), tareas, err, btn);
+  btn.onclick = async () => {
+    btn.disabled = true; err.hidden = true;
+    try {
+      await srv('publicarPauta', LAURA, LLAVE, p.fila, sel.value, nota.value, tareas.value);
+      BORR = BORR.filter(x => x.fila !== p.fila); PUBLICADAS++; pintarPautas();
+    } catch(e){ if (!sinAcceso(e)){ btn.disabled = false; err.textContent = sinRed(e) ? 'Sin conexión. Publica cuando tengas cobertura.' : 'No se ha podido publicar. Prueba otra vez.'; err.hidden = false; } }
+  };
+  return t;
 }
 
 function pintarLaura(lista){
@@ -699,6 +740,11 @@ async function abrirLaura(id){
   catch(e){ if (w) w.close(); if (!sinAcceso(e)) alert('No se ha podido abrir.'); }
 }
 $('b-recargar').onclick = cargarLaura;
+$('b-copiar').onclick = async () => {
+  const txt = $('aviso-txt').textContent;
+  try { await navigator.clipboard.writeText(txt); $('b-copiar').textContent = 'Copiado ✓'; }
+  catch(e){ const r = document.createRange(); r.selectNodeContents($('aviso-txt')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+};
 
 // ── Sin conexión: guardar la app en el móvil ──
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
