@@ -172,6 +172,14 @@ body.con-barra .barra{margin-top:calc(env(safe-area-inset-top,0px) + 10px);paddi
 body.con-barra .app{background:var(--fondo);border-radius:0 0 24px 24px;border:1px solid rgba(10,119,126,.10);border-top:0;padding-bottom:18px;margin-bottom:96px;min-height:calc(100vh - 230px)}
 @media (prefers-color-scheme: dark){body.con-barra{background:#071012}}
 nav.tabs button b{width:64px!important;height:4px;border-radius:3px}
+.esc-portada{display:flex;flex-direction:column;gap:14px;text-align:center;align-items:center;padding:22px 18px}
+.esc-portada p{margin:0;color:var(--apoyo);line-height:1.5}
+.esc-portada .pie{font-size:13px;color:var(--tenue)}
+.esc-ico{width:64px;height:64px;border-radius:50%;background:var(--turq-pastel);color:var(--turq-pastel-txt);display:grid;place-items:center}
+.esc-ico svg,.tarea-escuela svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.tarea-escuela svg{width:18px;height:18px}
+nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
+nav.tabs button b{width:52px!important}
 </style>
 </head>
 <body>
@@ -200,6 +208,23 @@ nav.tabs button b{width:64px!important;height:4px;border-radius:3px}
 
   <div id="v-cargando" class="cargando">Cargando…</div>
 
+
+  <!-- ESCUELA -->
+  <section id="v-escuela" hidden>
+    <div class="cab"><div><small>Tu formación</small><h2>Escuela ConectaTEA</h2></div></div>
+    <div class="pila">
+      <div class="tarjeta esc-portada">
+        <div class="esc-ico"><svg viewBox="0 0 24 24"><path d="M3 5.5C3 4.7 3.7 4 4.5 4H10c1.1 0 2 .9 2 2v13c0-.8-.7-1.5-1.5-1.5h-6c-.8 0-1.5-.7-1.5-1.5z"/><path d="M21 5.5c0-.8-.7-1.5-1.5-1.5H14c-1.1 0-2 .9-2 2v13c0-.8.7-1.5 1.5-1.5h6c.8 0 1.5-.7 1.5-1.5z"/></svg></div>
+        <p>Aquí están los vídeos de cada etapa del programa y las sesiones grupales grabadas. Míralos a tu ritmo, cuando tengas un rato.</p>
+        <a class="btn btn-prim" id="a-escuela" target="_blank" rel="noopener" style="text-decoration:none">Entrar en la Escuela</a>
+        <p class="pie">Se abre en Skool, con tu usuario de siempre.</p>
+      </div>
+      <div id="esc-semana" hidden>
+        <div class="seccion-tit">Esta semana te toca ver</div>
+        <div class="pila" id="esc-lista"></div>
+      </div>
+    </div>
+  </section>
 
   <!-- PANTALLA DE LAURA -->
   <section id="v-laura" hidden>
@@ -287,11 +312,6 @@ nav.tabs button b{width:64px!important;height:4px;border-radius:3px}
   <!-- MATERIALES -->
   <section id="v-materiales" hidden>
     <div class="cab"><div><small class="nino"></small><h2>Mis materiales</h2></div></div>
-    <a class="tarjeta fila escuela" id="a-escuela" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;margin:4px 0 14px">
-      <img src="skool.png" alt="" width="44" height="44" style="border-radius:10px;flex:none">
-      <div class="txt"><h4>La Escuela ConectaTEA</h4><p>Los vídeos de cada etapa y las grupales grabadas</p></div>
-      <span class="mini">Entrar</span>
-    </a>
     <div class="seg" role="tablist">
       <button role="tab" data-seg="apoyos" aria-selected="true">Apoyos</button>
       <button role="tab" data-seg="sesiones" aria-selected="false">Sesiones</button>
@@ -321,6 +341,7 @@ nav.tabs button b{width:64px!important;height:4px;border-radius:3px}
   <button data-ir="inicio" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Mi semana<b></b></button>
   <button data-ir="registro"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>Registro<b></b></button>
   <button data-ir="materiales"><svg viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>Materiales<b></b></button>
+  <button data-ir="escuela"><svg viewBox="0 0 24 24"><path d="M3 5.5C3 4.7 3.7 4 4.5 4H10c1.1 0 2 .9 2 2v13c0-.8-.7-1.5-1.5-1.5h-6c-.8 0-1.5-.7-1.5-1.5z"/><path d="M21 5.5c0-.8-.7-1.5-1.5-1.5H14c-1.1 0-2 .9-2 2v13c0-.8.7-1.5 1.5-1.5h6c.8 0 1.5-.7 1.5-1.5z"/></svg>Escuela<b></b></button>
 </div></nav>
 
 <script>
@@ -361,10 +382,10 @@ function el(tag, attrs, ...hijos){
 const fecha = (ms) => new Date(ms).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
 
 function mostrar(v){
-  ['login','sinenlace','inicio','registro','materiales','laura'].forEach(n => $('v-' + n).hidden = n !== v);
+  ['login','sinenlace','inicio','registro','materiales','escuela','laura'].forEach(n => $('v-' + n).hidden = n !== v);
   $('v-cargando').hidden = true;
-  $('tabs').hidden = !['inicio','registro','materiales'].includes(v);
-  const barra = ['inicio','registro','materiales','laura'].includes(v);
+  $('tabs').hidden = !['inicio','registro','materiales','escuela'].includes(v);
+  const barra = ['inicio','registro','materiales','escuela','laura'].includes(v);
   $('barra').hidden = !barra; document.body.classList.toggle('con-barra', barra);
   document.querySelectorAll('#tabs button').forEach(b => b.dataset.ir === v ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
   if (v === 'registro'){ $('f-reg').hidden = false; $('reg-ok').hidden = true; }
@@ -411,6 +432,9 @@ function pintar(){
     el('div', {class:'txt'}, el('h4', {}, c.que), el('p', {}, c.txt)),
     c.enlace ? el('a', {class:'mini', href:c.enlace, target:'_blank', rel:'noopener', style:'text-decoration:none'}, 'Enlace') : null)));
 
+  const conEscuela = d.semana ? d.semana.tareas.filter(t => /skool\.com|escuela/i.test(t)) : [];
+  $('esc-semana').hidden = !conEscuela.length;
+  $('esc-lista').replaceChildren(...conEscuela.map(t => el('div', {class:'tarjeta'}, el('ul', {class:'tareas'}, tarea(t)))));
   const m = d.materiales;
   $('apoyos-laura').replaceChildren(...(m.laura.length ? m.laura.map(apoyoLaura) : [el('p', {class:'vacio'}, 'Aquí aparecerán los apoyos que te prepare Laura.')]));
   $('apoyos-suyos').replaceChildren(...m.suyos.map(a => el('div', {class:'tarjeta'},
@@ -425,12 +449,13 @@ function pintar(){
 }
 
 // Si una tarea lleva un enlace de Skool o menciona la Escuela, lleva su botón directo.
+function libroIco(){ const d = document.createElement('span'); d.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 5.5C3 4.7 3.7 4 4.5 4H10c1.1 0 2 .9 2 2v13c0-.8-.7-1.5-1.5-1.5h-6c-.8 0-1.5-.7-1.5-1.5z"/><path d="M21 5.5c0-.8-.7-1.5-1.5-1.5H14c-1.1 0-2 .9-2 2v13c0-.8.7-1.5 1.5-1.5h6c.8 0 1.5-.7 1.5-1.5z"/></svg>'; return d.firstChild; }
 function tarea(t){
   const m = t.match(/https?:\/\/(www\.)?skool\.com\/\S+/i);
   const texto = m ? t.replace(m[0], '').replace(/\s+([.,:;])/g, '$1').trim() : t;
   const url = m ? m[0] : (/escuela/i.test(t) ? DATOS.escuela : null);
   return el('li', {}, texto, url ? el('br') : null,
-    url ? el('a', {class:'mini tarea-escuela', href:url, target:'_blank', rel:'noopener'}, el('img', {src:'skool.png', alt:''}), 'Ir a la Escuela') : null);
+    url ? el('a', {class:'mini tarea-escuela', href:url, target:'_blank', rel:'noopener'}, libroIco(), 'Ir a la Escuela') : null);
 }
 
 function archivoFila(a, ico){
