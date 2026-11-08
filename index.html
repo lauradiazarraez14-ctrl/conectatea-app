@@ -240,7 +240,7 @@ nav.tabs button b{width:52px!important}
 
   <!-- MI SEMANA -->
   <section id="v-inicio" hidden>
-    <div class="cab"><div><small id="hola"></small><h2 id="nino-edad"></h2></div><div class="avatar" id="inicial"></div></div>
+    <div class="cab"><div><small id="hola"></small><h2 id="nino-edad"></h2></div></div>
     <div class="tarjeta instalar" id="instalar" hidden style="margin-bottom:12px">
       <button class="x" type="button" id="instalar-x" aria-label="Cerrar">×</button>
       <h4>Ten la app a mano en tu móvil</h4>
@@ -416,7 +416,6 @@ function pintar(){
   const d = DATOS;
   $('hola').textContent = 'Hola, ' + d.madre;
   $('nino-edad').textContent = d.nino + (d.edad ? ', ' + d.edad : '');
-  $('inicial').textContent = d.nino.charAt(0);
   document.querySelectorAll('.nino').forEach(n => n.textContent = d.nino);
   $('a-escuela').href = d.escuela;
 
