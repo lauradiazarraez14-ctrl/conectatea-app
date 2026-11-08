@@ -180,10 +180,12 @@ nav.tabs button b{width:64px!important;height:4px;border-radius:3px}
 .tarea-escuela svg{width:18px;height:18px}
 nav.tabs .in{grid-template-columns:repeat(4,1fr)!important}
 nav.tabs button b{width:52px!important}
+.sinred{position:sticky;top:0;z-index:20;background:var(--teja-pastel);color:var(--teja-txt);font-size:13px;font-weight:600;text-align:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 8px}
 </style>
 </head>
 <body>
 <header class="barra" id="barra" hidden><div class="in"><img src="logo-blanco.png" alt="ConectaTEA" width="84" height="38"></div></header>
+<div class="sinred" id="sinred" hidden>Sin conexión: estás viendo lo último que se cargó.</div>
 <div class="app">
 
   <!-- ENTRADA -->
@@ -304,7 +306,7 @@ nav.tabs button b{width:52px!important}
     </form>
     <div id="reg-ok" class="tarjeta ok" hidden>
       <div class="circ">✓</div><h3>Guardado</h3>
-      <p>Ya está en tu registro. Lo verá Laura antes de la próxima sesión.</p>
+      <p id="reg-ok-txt">Ya está en tu registro. Lo verá Laura antes de la próxima sesión.</p>
       <button class="btn btn-sec" data-ir="inicio">Volver a Mi semana</button>
     </div>
   </section>
@@ -364,10 +366,32 @@ function guardarLlave(v){ try{ v ? localStorage.setItem(CLAVE, v) : localStorage
 function leerLlave(){ try{ return localStorage.getItem(CLAVE); }catch(e){ return null; } }
 
 async function srv(fn, ...args){
-  const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }) });
+  let res;
+  try { res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }) }); }
+  catch(e){ throw new Error('SIN_RED'); }
   const d = await res.json();
   if (d.error) throw new Error(d.error);
   return d.r;
+}
+const sinRed = (e) => String(e && e.message || e).indexOf('SIN_RED') >= 0 || !navigator.onLine;
+function local(k, v){ try{ if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); }catch(e){ return null; } }
+function avisoRed(on){ $('sinred').hidden = !on; }
+window.addEventListener('online', () => { avisoRed(false); enviarPendientes(); });
+window.addEventListener('offline', () => avisoRed(true));
+
+// Lo escrito sin conexión espera aquí y se envía al volver la cobertura.
+const COLA = () => 'ctea_cola_' + TOKEN;
+function encolar(fn, args){ const c = local(COLA()) || []; c.push({ fn, args }); local(COLA(), c); }
+let enviando = false;
+async function enviarPendientes(){
+  if (enviando || !TOKEN || !LLAVE) return;
+  const c = local(COLA()) || []; if (!c.length) return;
+  enviando = true;
+  while (c.length){
+    try { await srv(c[0].fn, TOKEN, LLAVE, ...c[0].args); c.shift(); local(COLA(), c); }
+    catch(e){ break; }
+  }
+  enviando = false;
 }
 function sinAcceso(e){
   if (String(e && e.message || e).indexOf('SIN_ACCESO') >= 0){ guardarLlave(null); mostrar('login'); return true; }
@@ -400,14 +424,19 @@ $('f-login').onsubmit = async (e) => {
     const r = LAURA ? await srv('entrarLaura', LAURA, $('codigo').value) : await srv('entrar', TOKEN, $('codigo').value);
     if (!r.ok){ $('login-error').textContent = r.msg; $('login-error').hidden = false; }
     else { LLAVE = r.llave; guardarLlave(LLAVE); await (LAURA ? cargarLaura() : cargar()); }
-  } catch(err){ $('login-error').textContent = 'No se ha podido entrar. Prueba otra vez.'; $('login-error').hidden = false; }
+  } catch(err){ $('login-error').textContent = sinRed(err) ? 'Para entrar la primera vez necesitas conexión.' : 'No se ha podido entrar. Prueba otra vez.'; $('login-error').hidden = false; }
   b.disabled = false;
 };
 
 async function cargar(){
   $('v-cargando').hidden = false;
-  try { DATOS = await srv('cargar', TOKEN, LLAVE); }
-  catch(e){ if (!sinAcceso(e)){ $('v-cargando').textContent = 'No se ha podido cargar. Cierra y vuelve a abrir.'; } return; }
+  const copia = local('ctea_datos_' + TOKEN);
+  try { DATOS = await srv('cargar', TOKEN, LLAVE); local('ctea_datos_' + TOKEN, DATOS); avisoRed(false); enviarPendientes(); }
+  catch(e){
+    if (sinAcceso(e)) return;
+    if (copia){ DATOS = copia; avisoRed(true); }
+    else { $('v-cargando').textContent = sinRed(e) ? 'Sin conexión. Abre la app cuando tengas cobertura.' : 'No se ha podido cargar. Cierra y vuelve a abrir.'; return; }
+  }
   pintar(); pintarInstalar(); mostrar('inicio');
 }
 
@@ -471,8 +500,13 @@ function apoyoLaura(a){
   env.onclick = async () => {
     if (!ta.value.trim()) return;
     env.disabled = true;
-    try { await srv('pedirCambio', TOKEN, LLAVE, a.id, ta.value); caja.replaceChildren(el('p', {style:'margin:0;font-weight:700;color:var(--verde)'}, 'Enviado. Laura lo verá y te dirá algo.')); }
-    catch(e){ if (!sinAcceso(e)){ env.disabled = false; alert('No se ha podido enviar. Prueba otra vez.'); } }
+    const hecho = (t) => caja.replaceChildren(el('p', {style:'margin:0;font-weight:700;color:var(--verde)'}, t));
+    try { await srv('pedirCambio', TOKEN, LLAVE, a.id, ta.value); hecho('Enviado. Laura lo verá y te dirá algo.'); }
+    catch(e){
+      if (sinAcceso(e)) return;
+      if (sinRed(e)){ encolar('pedirCambio', [a.id, ta.value]); hecho('Guardado en tu móvil. Se enviará a Laura cuando tengas conexión.'); }
+      else { env.disabled = false; alert('No se ha podido enviar. Prueba otra vez.'); }
+    }
   };
   caja.append(ta, env);
   const estado = a.cambio ? el('p', {class:'linea'}, ...(a.cambio.respuesta ? [el('strong', {}, 'Laura: '), a.cambio.respuesta] : ['Has pedido un cambio. Laura lo está mirando.'])) : null;
@@ -487,24 +521,31 @@ async function abrir(id, titulo, tipo){
   const w = externo ? window.open('', '_blank') : null;
   if (externo){
     try { const r = await srv('abrir', TOKEN, LLAVE, id); if (w) w.location = r.url; else location.href = r.url; }
-    catch(e){ if (w) w.close(); if (!sinAcceso(e)) alert('No se ha podido abrir. Prueba otra vez.'); }
+    catch(e){ if (w) w.close(); if (!sinAcceso(e)) alert(sinRed(e) ? 'Sin conexión. Ábrelo cuando tengas cobertura.' : 'No se ha podido abrir. Prueba otra vez.'); }
     return;
   }
   $('visor-tit').textContent = titulo; $('visor-cont').replaceChildren(el('div', {class:'cargando'}, 'Abriendo…'));
   $('visor').hidden = false;
   try {
-    const r = await srv('abrir', TOKEN, LLAVE, id);
+    let r;
+    try { r = await srv('abrir', TOKEN, LLAVE, id); if (r.modo === 'html') local('ctea_doc_' + id, r); }
+    catch(e){ r = sinRed(e) ? local('ctea_doc_' + id) : null; if (!r) throw e; }
     if (r.modo === 'url'){ $('visor').hidden = true; window.open(r.url, '_blank'); return; }
     if (r.modo === 'img') $('visor-cont').replaceChildren(el('img', {src:r.src, alt:titulo}));
     else { const d = el('div', {class:'doc'}); d.innerHTML = r.html; $('visor-cont').replaceChildren(d); }
-  } catch(e){ if (!sinAcceso(e)) $('visor-cont').replaceChildren(el('p', {class:'vacio'}, 'No se ha podido abrir. Prueba otra vez.')); }
+  } catch(e){ if (!sinAcceso(e)) $('visor-cont').replaceChildren(el('p', {class:'vacio'}, sinRed(e) ? 'Sin conexión. Ábrelo cuando tengas cobertura.' : 'No se ha podido abrir. Prueba otra vez.')); }
 }
 $('b-cerrar').onclick = () => $('visor').hidden = true;
 $('b-ver-registro').onclick = async () => {
   $('visor-tit').textContent = 'Tu registro'; $('visor-cont').replaceChildren(el('div', {class:'cargando'}, 'Abriendo…'));
   $('visor').hidden = false;
-  try { const html = await srv('verRegistro', TOKEN, LLAVE); const d = el('div', {class:'doc'}); d.innerHTML = html; $('visor-cont').replaceChildren(d); }
-  catch(e){ if (!sinAcceso(e)) $('visor-cont').replaceChildren(el('p', {class:'vacio'}, 'No se ha podido abrir.')); }
+  try {
+    let html;
+    try { html = await srv('verRegistro', TOKEN, LLAVE); local('ctea_reg_' + TOKEN, html); }
+    catch(e){ html = sinRed(e) ? local('ctea_reg_' + TOKEN) : null; if (!html) throw e; }
+    const d = el('div', {class:'doc'}); d.innerHTML = html; $('visor-cont').replaceChildren(d);
+  }
+  catch(e){ if (!sinAcceso(e)) $('visor-cont').replaceChildren(el('p', {class:'vacio'}, sinRed(e) ? 'Sin conexión. Podrás verlo cuando tengas cobertura.' : 'No se ha podido abrir.')); }
 };
 
 // ── Registro ──
@@ -518,17 +559,24 @@ $('f-reg').onsubmit = async (e) => {
   const vacio = d.tipo === 'avance' ? !d.avance.trim() : ![d.antes, d.reaccion, d.tu, d.fin].some(x => x.trim());
   if (vacio){ $('reg-error').textContent = 'Escribe algo antes de guardar.'; $('reg-error').hidden = false; return; }
   $('reg-error').hidden = true; $('b-guardar').disabled = true;
-  try {
-    await srv('guardarRegistro', TOKEN, LLAVE, d);
+  const listo = (msg) => {
     ['r-avance','r-antes','r-reaccion','r-tu','r-fin'].forEach(i => $(i).value = '');
+    $('reg-ok-txt').textContent = msg;
     $('f-reg').hidden = true; $('reg-ok').hidden = false; window.scrollTo(0, 0);
-  } catch(err){ if (!sinAcceso(err)){ $('reg-error').textContent = 'No se ha podido guardar. Lo que has escrito sigue aquí: prueba otra vez.'; $('reg-error').hidden = false; } }
+  };
+  try { await srv('guardarRegistro', TOKEN, LLAVE, d); listo('Ya está en tu registro. Lo verá Laura antes de la próxima sesión.'); }
+  catch(err){
+    if (sinAcceso(err)) return;
+    if (sinRed(err)){ encolar('guardarRegistro', [d]); listo('Lo hemos guardado en tu móvil. Se enviará a Laura en cuanto tengas conexión.'); }
+    else { $('reg-error').textContent = 'No se ha podido guardar. Lo que has escrito sigue aquí: prueba otra vez.'; $('reg-error').hidden = false; }
+  }
   $('b-guardar').disabled = false;
 };
 
 // ── Subir apoyo ──
 $('f-subir').onchange = async (e) => {
   const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+  if (!navigator.onLine){ alert('Para subir un apoyo necesitas conexión. Prueba cuando tengas cobertura.'); return; }
   const l = $('l-subir'); l.textContent = 'Subiendo…';
   try {
     let mime = f.type, b64;
@@ -538,7 +586,7 @@ $('f-subir').onchange = async (e) => {
     await srv('subirApoyo', TOKEN, LLAVE, nombre, mime, b64);
     DATOS.materiales.suyos.unshift({ id: '', nombre: nombre.replace(/\.[^.]+$/, ''), fecha: Date.now(), tipo: mime === 'image/jpeg' ? 'FOTO' : 'PDF', respuesta: '' });
     pintar(); document.querySelector('[data-seg="apoyos"]').click();
-  } catch(err){ if (!sinAcceso(err)) alert(err.message === 'grande' ? 'El archivo es demasiado grande.' : 'No se ha podido subir. Prueba otra vez.'); }
+  } catch(err){ if (!sinAcceso(err)) alert(err.message === 'grande' ? 'El archivo es demasiado grande.' : sinRed(err) ? 'Para subir un apoyo necesitas conexión. Prueba cuando tengas cobertura.' : 'No se ha podido subir. Prueba otra vez.'); }
   l.textContent = '+ Subir un apoyo mío';
 };
 function aBase64(f){ return new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = ko; r.readAsDataURL(f); }); }
@@ -594,7 +642,7 @@ async function cargarLaura(){
   $('v-cargando').hidden = false;
   let lista;
   try { lista = await srv('pendientes', LAURA, LLAVE); }
-  catch(e){ if (!sinAcceso(e)) $('v-cargando').textContent = 'No se ha podido cargar. Cierra y vuelve a abrir.'; return; }
+  catch(e){ if (!sinAcceso(e)) $('v-cargando').textContent = sinRed(e) ? 'Sin conexión. Abre tu pantalla cuando tengas cobertura.' : 'No se ha podido cargar. Cierra y vuelve a abrir.'; return; }
   pintarLaura(lista); mostrar('laura');
 }
 
@@ -642,6 +690,9 @@ async function abrirLaura(id){
   catch(e){ if (w) w.close(); if (!sinAcceso(e)) alert('No se ha podido abrir.'); }
 }
 $('b-recargar').onclick = cargarLaura;
+
+// ── Sin conexión: guardar la app en el móvil ──
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
 // ── Arranque ──
 (function(){
