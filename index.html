@@ -160,14 +160,14 @@ nav.tabs button[aria-current="page"] b{background:var(--coral)}
 .tareas li::before{background:var(--coral)}
 .enlace{color:var(--teja-txt)}
 .linea strong{color:var(--marca)}
-.barra{background:var(--marca);padding:calc(env(safe-area-inset-top,0px) + 10px) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
-.barra .in{max-width:440px;margin:0 auto;display:flex;align-items:center}
-.barra img{height:38px;width:auto;display:block}
+.barra{display:flex;justify-content:center;padding-top:calc(env(safe-area-inset-top,0px) + 14px);padding-bottom:2px}
+.barra .in{width:104px;height:104px;border-radius:50%;background:var(--marca);display:grid;place-items:center;box-shadow:0 4px 14px rgba(10,119,126,.22)}
+.barra img{width:76px;height:auto;display:block;margin-top:2px}
 body.con-barra .app{padding-top:0}
 </style>
 </head>
 <body>
-<header class="barra" id="barra" hidden><div class="in"><img src="logo-blanco.png" alt="ConectaTEA" width="83" height="38"></div></header>
+<header class="barra" id="barra" hidden><div class="in"><img src="logo-blanco.png" alt="ConectaTEA" width="76" height="35"></div></header>
 <div class="app">
 
   <!-- ENTRADA -->
