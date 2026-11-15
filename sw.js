@@ -1,6 +1,6 @@
 // Tu espacio ConectaTEA — funciona sin conexión.
 // La página se pide primero a internet (para que los cambios lleguen al momento) y, si no hay, se usa la guardada.
-const VERSION = 'ctea-v2';
+const VERSION = 'ctea-v3';
 const BASE = ['./', './manifest.webmanifest', './logo-blanco.png', './logo-completo.png', './logo-180.png', './logo-192.png', './logo-512.png',
   './fuentes/montserrat.css', './fuentes/montserrat-latin.woff2', './fuentes/montserrat-latin-ext.woff2'];
 
@@ -20,9 +20,17 @@ self.addEventListener('fetch', (e) => {
 
   // La página: primero internet, si no, la guardada (sin tener en cuenta el ?f=...).
   if (req.mode === 'navigate' || (url.origin === location.origin && url.pathname.endsWith('/'))) {
-    e.respondWith(fetch(req).then((r) => {
+    // Si internet tarda más de 2,5 s, se abre la guardada (y la nueva queda lista para la próxima vez).
+    const red = fetch(req).then((r) => {
       const copia = r.clone(); caches.open(VERSION).then((c) => c.put('./', copia)); return r;
-    }).catch(() => caches.match('./')));
+    });
+    e.respondWith(new Promise((ok) => {
+      let hecho = false;
+      const usarGuardada = () => caches.match('./').then((m) => { if (!hecho && m){ hecho = true; ok(m); } });
+      const t = setTimeout(usarGuardada, 2500);
+      red.then((r) => { clearTimeout(t); if (!hecho){ hecho = true; ok(r); } })
+         .catch(() => { clearTimeout(t); caches.match('./').then((m) => { if (!hecho){ hecho = true; ok(m || Response.error()); } }); });
+    }));
     return;
   }
   // Logos, iconos y tipografía de la propia app: los guardados, y si no, de internet.

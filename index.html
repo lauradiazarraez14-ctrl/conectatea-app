@@ -406,13 +406,25 @@ const $ = (id) => document.getElementById(id);
 function guardarLlave(v){ try{ v ? localStorage.setItem(CLAVE, v) : localStorage.removeItem(CLAVE); }catch(e){} }
 function leerLlave(){ try{ return localStorage.getItem(CLAVE); }catch(e){ return null; } }
 
+// Las lecturas se reintentan solas si Google tarda o falla un momento (las escrituras no, para no duplicar).
+const LECTURAS = ['cargar','verRegistro','abrir','entrar','entrarLaura','pendientes','borradores'];
+const espera = (ms) => new Promise(r => setTimeout(r, ms));
 async function srv(fn, ...args){
-  let res;
-  try { res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }) }); }
-  catch(e){ throw new Error('SIN_RED'); }
-  const d = await res.json();
-  if (d.error) throw new Error(d.error);
-  return d.r;
+  const intentos = LECTURAS.includes(fn) ? 3 : 1;
+  for (let i = 0; i < intentos; i++){
+    if (i) await espera(900 * i);
+    let res, d;
+    try {
+      res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }) });
+      d = await res.json();
+    } catch(e){
+      if (i < intentos - 1 && navigator.onLine) continue;
+      // Solo es «sin conexión» si el móvil de verdad no tiene red; si no, es que Google ha tardado.
+      throw new Error(navigator.onLine ? 'LENTO' : 'SIN_RED');
+    }
+    if (d.error) throw new Error(d.error);
+    return d.r;
+  }
 }
 const sinRed = (e) => String(e && e.message || e).indexOf('SIN_RED') >= 0 || !navigator.onLine;
 function local(k, v){ try{ if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); }catch(e){ return null; } }
@@ -471,8 +483,11 @@ $('f-login').onsubmit = async (e) => {
 };
 
 async function cargar(){
-  $('v-cargando').hidden = false;
   const copia = local('ctea_datos_' + TOKEN);
+  // Si ya hay datos guardados, se enseñan al momento y se actualizan por detrás.
+  const yaVisible = !!copia;
+  if (copia){ DATOS = copia; pintar(); pintarInstalar(); mostrar('inicio'); }
+  else { $('v-cargando').textContent = 'Cargando…'; $('v-cargando').hidden = false; }
   try {
     const r = await srv('cargar', TOKEN, LLAVE);
     if (r.consentir){ document.querySelectorAll('.c-nino').forEach(n => n.textContent = r.nino); mostrar('consentir'); return; }
@@ -480,10 +495,12 @@ async function cargar(){
   }
   catch(e){
     if (sinAcceso(e)) return;
-    if (copia){ DATOS = copia; avisoRed(true); }
-    else { $('v-cargando').textContent = sinRed(e) ? 'Sin conexión. Abre la app cuando tengas cobertura.' : 'No se ha podido cargar. Cierra y vuelve a abrir.'; return; }
+    if (copia){ avisoRed(sinRed(e)); return; }
+    $('v-cargando').textContent = sinRed(e) ? 'Sin conexión. Abre la app cuando tengas cobertura.' : 'Está tardando más de la cuenta. Cierra la app y vuelve a abrirla.';
+    return;
   }
-  pintar(); pintarInstalar(); mostrar('inicio');
+  pintar(); pintarInstalar();
+  if (!yaVisible) mostrar('inicio');
 }
 
 // ── Pintar ──
@@ -803,6 +820,13 @@ $('b-avisar').onclick = async () => {
     else { $('aviso-err').textContent = r.msg; $('aviso-err').hidden = false; b.disabled = false; }
   } catch(e){ if (!sinAcceso(e)){ b.disabled = false; $('aviso-err').textContent = sinRed(e) ? 'Sin conexión. Prueba cuando tengas cobertura.' : 'No se ha podido avisar. Prueba otra vez.'; $('aviso-err').hidden = false; } }
 };
+// Al volver a la app después de un rato, se actualiza sola.
+let ultimaCarga = Date.now();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !TOKEN || !LLAVE || !DATOS) return;
+  if (Date.now() - ultimaCarga < 5 * 60 * 1000) return;
+  ultimaCarga = Date.now(); cargar();
+});
 // ── Sin conexión: guardar la app en el móvil ──
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
