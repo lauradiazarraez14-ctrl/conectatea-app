@@ -212,6 +212,27 @@ nav.tabs button b{width:52px!important}
 
   <div id="v-cargando" class="cargando">Cargando…</div>
 
+  <!-- CONSENTIMIENTO (solo la primera vez) -->
+  <section id="v-consentir" hidden>
+    <div class="cab"><div><small>Antes de empezar</small><h2>Tus datos, protegidos</h2></div></div>
+    <div class="pila">
+      <div class="tarjeta">
+        <p style="margin:0 0 10px">En tu espacio vas a guardar información sobre la salud y el desarrollo de <b class="c-nino"></b>. Por eso necesitamos tu permiso antes de empezar.</p>
+        <p style="margin:0">Solo lo vemos Laura y el equipo que te acompaña, se usa únicamente para acompañaros en el programa y se borra al terminar. Puedes pedir que se borre cuando quieras.</p>
+        <button class="enlace" type="button" id="b-legal">Leer el texto completo</button>
+      </div>
+      <form id="f-consentir" class="pila">
+        <label class="tarjeta fila" style="cursor:pointer;align-items:flex-start"><input type="checkbox" id="c-salud" style="width:22px;height:22px;flex:none;margin-top:2px;accent-color:var(--marca)">
+          <span><b>Acepto</b> el tratamiento de los datos de salud de <span class="c-nino"></span> para el acompañamiento de ConectaTEA y el uso de esta app.</span></label>
+        <label class="tarjeta fila" style="cursor:pointer;align-items:flex-start"><input type="checkbox" id="c-grab" style="width:22px;height:22px;flex:none;margin-top:2px;accent-color:var(--marca)">
+          <span>Autorizo que se graben las sesiones para poder volver a verlas. <span style="color:var(--tenue)">(Voluntario)</span></span></label>
+        <p class="error" id="cons-error" hidden></p>
+        <button class="btn btn-prim" id="b-aceptar" disabled>Aceptar y entrar</button>
+        <p class="pie">Puedes retirar tu permiso cuando quieras escribiendo a laura@familiasconectatea.com.</p>
+      </form>
+    </div>
+  </section>
+
 
   <!-- ESCUELA -->
   <section id="v-escuela" hidden>
@@ -425,10 +446,10 @@ const hoyISO = () => { const h = new Date(); return new Date(h.getTime() - h.get
 const fecha = (ms) =>new Date(ms).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
 
 function mostrar(v){
-  ['login','sinenlace','inicio','registro','materiales','escuela','laura'].forEach(n => $('v-' + n).hidden = n !== v);
+  ['login','sinenlace','consentir','inicio','registro','materiales','escuela','laura'].forEach(n => $('v-' + n).hidden = n !== v);
   $('v-cargando').hidden = true;
   $('tabs').hidden = !['inicio','registro','materiales','escuela'].includes(v);
-  const barra = ['inicio','registro','materiales','escuela','laura'].includes(v);
+  const barra = ['consentir','inicio','registro','materiales','escuela','laura'].includes(v);
   $('barra').hidden = !barra; document.body.classList.toggle('con-barra', barra);
   document.querySelectorAll('#tabs button').forEach(b => b.dataset.ir === v ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
   if (v === 'registro'){ $('f-reg').hidden = false; $('reg-ok').hidden = true; }
@@ -450,7 +471,11 @@ $('f-login').onsubmit = async (e) => {
 async function cargar(){
   $('v-cargando').hidden = false;
   const copia = local('ctea_datos_' + TOKEN);
-  try { DATOS = await srv('cargar', TOKEN, LLAVE); local('ctea_datos_' + TOKEN, DATOS); avisoRed(false); enviarPendientes(); }
+  try {
+    const r = await srv('cargar', TOKEN, LLAVE);
+    if (r.consentir){ document.querySelectorAll('.c-nino').forEach(n => n.textContent = r.nino); mostrar('consentir'); return; }
+    DATOS = r; local('ctea_datos_' + TOKEN, DATOS); avisoRed(false); enviarPendientes();
+  }
   catch(e){
     if (sinAcceso(e)) return;
     if (copia){ DATOS = copia; avisoRed(true); }
@@ -575,6 +600,25 @@ $('b-ver-registro').onclick = async () => {
   }
   catch(e){ if (!sinAcceso(e)) $('visor-cont').replaceChildren(el('p', {class:'vacio'}, sinRed(e) ? 'Sin conexión. Podrás verlo cuando tengas cobertura.' : 'No se ha podido abrir.')); }
 };
+
+// ── Consentimiento ──
+$('c-salud').onchange = () => { $('b-aceptar').disabled = !$('c-salud').checked; };
+$('b-legal').onclick = () => { $('visor-tit').textContent = 'Cómo protegemos tus datos'; const d = el('div', {class:'doc'}); d.innerHTML = LEGAL; $('visor-cont').replaceChildren(d); $('visor').hidden = false; };
+$('f-consentir').onsubmit = async (e) => {
+  e.preventDefault();
+  if (!$('c-salud').checked) return;
+  const b = $('b-aceptar'); b.disabled = true; $('cons-error').hidden = true;
+  try { await srv('aceptar', TOKEN, LLAVE, $('c-grab').checked); await cargar(); }
+  catch(err){ if (!sinAcceso(err)){ $('cons-error').textContent = sinRed(err) ? 'Necesitas conexión para aceptar. Prueba cuando tengas cobertura.' : 'No se ha podido guardar. Prueba otra vez.'; $('cons-error').hidden = false; b.disabled = false; } }
+};
+const LEGAL = `<p><b>Responsable.</b> Laura Díaz Arráez, NIF 47088808B, C/ Dalmau 23, Ático 1ª, 08922 Santa Coloma de Gramenet (Barcelona). Contacto: laura@familiasconectatea.com.</p>
+<p><b>Qué datos se tratan.</b> Los tuyos (identificación, contacto, facturación y pago) y los de tu hijo y vuestro entorno necesarios para el acompañamiento: nombre, edad, diagnóstico, información sobre su salud, desarrollo, comunicación, conducta, rutinas y escolarización, y lo que aportes en cuestionarios, registros, fotos de apoyos y sesiones.</p>
+<p><b>Para qué.</b> Prestar el programa ConectaTEA (sesiones, seguimiento, informes, apoyos y soporte); grabar y resumir las sesiones para que puedas volver a verlas, si lo autorizas; darte acceso a esta app, la Escuela y la comunidad; y la facturación.</p>
+<p><b>Base legal.</b> El contrato del programa (art. 6.1.b RGPD) y, para los datos de salud de tu hijo, tu consentimiento expreso como madre, padre o tutor legal (art. 9.2.a RGPD).</p>
+<p><b>Quién accede.</b> Laura y los profesionales del equipo que participan en el programa, con secreto profesional. Proveedores técnicos: Google (almacenamiento y app), Zoom, Fathom (grabación y resumen), Skool (Escuela), Telegram (comunidad), GoHighLevel y Stripe. Algunos tienen sede en EE. UU.; las transferencias se amparan en el Marco de Privacidad de Datos UE-EE. UU. o en cláusulas tipo de la Comisión Europea. No se ceden datos a nadie salvo obligación legal.</p>
+<p><b>Cuánto tiempo.</b> Solo mientras estés en el programa (incluida la ampliación por garantía). En el mes siguiente a terminar se borra todo, también el acceso a la app. Puedes pedir antes una copia de tus materiales. Los datos de facturación se guardan el tiempo que exige la ley.</p>
+<p><b>Tus derechos.</b> Puedes acceder, corregir, borrar, limitar u oponerte, pedir la portabilidad y retirar tu permiso cuando quieras, escribiendo a laura@familiasconectatea.com. Retirarlo no afecta a lo anterior, pero puede impedir seguir con el acompañamiento personalizado. Puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
+<p><b>Otro progenitor.</b> Declaras tener la patria potestad y poder contratar el servicio. Si el otro progenitor pide información, se atenderá según la ley, avisándote antes.</p>`;
 
 // ── Registro ──
 document.querySelectorAll('input[name="tipo"]').forEach(r => r.onchange = () => {
