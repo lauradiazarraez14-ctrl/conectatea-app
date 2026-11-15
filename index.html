@@ -486,7 +486,7 @@ function pintar(){
   $('apoyos-laura').replaceChildren(...(m.laura.length ? m.laura.map(apoyoLaura) : [el('p', {class:'vacio'}, 'Todavía no hay apoyos.')]));
   $('apoyos-suyos').replaceChildren(...m.suyos.map(a => el('div', {class:'tarjeta'},
     archivoFila(a, 'FOTO'),
-    el('p', {class:'linea'}, ...(a.respuesta ? [el('strong', {}, 'Laura: '), a.respuesta] : ['Lo has subido tú. Laura lo está revisando.'])))));
+    el('p', {class:'linea'}, ...(a.respuesta ? [el('strong', {}, 'Laura: '), a.respuesta] : [a.pendiente === false ? 'Lo has hecho tú.' : 'Lo has subido tú. Laura lo está revisando.'])))));
   $('sesiones').replaceChildren(...(m.sesiones.length ? m.sesiones.map(g => el('div', {class:'tarjeta'},
     el('div', {class:'fila'}, el('div', {class:'ico'}, 'SES'), el('div', {class:'txt'}, el('h4', {}, g.titulo), el('p', {}, g.fecha || ''))),
     el('div', {class:'dos'},
@@ -536,7 +536,7 @@ function apoyoLaura(a){
 // ── Visor ──
 async function abrir(id, titulo, tipo){
   // Vídeos y PDF: se abre la ventana en el mismo toque (si no, el iPhone la bloquea) y luego se le pone la dirección.
-  const externo = tipo === 'VÍDEO' || tipo === 'PDF';
+  const externo = tipo === 'VÍDEO' || tipo === 'PDF' || tipo === 'DIAPOS';
   const w = externo ? window.open('', '_blank') : null;
   if (externo){
     try { const r = await srv('abrir', TOKEN, LLAVE, id); if (w) w.location = r.url; else location.href = r.url; }
