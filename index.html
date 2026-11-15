@@ -421,7 +421,8 @@ function el(tag, attrs, ...hijos){
   hijos.flat().forEach(h => h != null && n.append(h.nodeType ? h : document.createTextNode(h)));
   return n;
 }
-const fecha = (ms) => new Date(ms).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+const hoyISO = () => { const h = new Date(); return new Date(h.getTime() - h.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const fecha = (ms) =>new Date(ms).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
 
 function mostrar(v){
   ['login','sinenlace','inicio','registro','materiales','escuela','laura'].forEach(n => $('v-' + n).hidden = n !== v);
@@ -587,6 +588,7 @@ $('f-reg').onsubmit = async (e) => {
   $('reg-error').hidden = true; $('b-guardar').disabled = true;
   const listo = (msg) => {
     ['r-avance','r-antes','r-reaccion','r-tu','r-fin'].forEach(i => $(i).value = '');
+    $('r-fecha').value = hoyISO();
     $('reg-ok-txt').textContent = msg;
     $('f-reg').hidden = true; $('reg-ok').hidden = false; window.scrollTo(0, 0);
   };
@@ -759,7 +761,14 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
 
 // ── Arranque ──
 (function(){
-  const hoy = new Date(); $('r-fecha').value = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  $('r-fecha').value = hoyISO();
+  // Si la app se queda abierta de un día para otro, que el registro no proponga la fecha de ayer.
+  let diaCarga = hoyISO();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || hoyISO() === diaCarga) return;
+    if ($('r-fecha').value === diaCarga) $('r-fecha').value = hoyISO();
+    diaCarga = hoyISO();
+  });
   if (LAURA){
     $('f-login').querySelector('label').textContent = 'Tu código de Laura';
     LLAVE = leerLlave(); if (LLAVE) cargarLaura(); else mostrar('login'); return;
