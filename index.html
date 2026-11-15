@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ConectaTEA</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; worker-src 'self'; manifest-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0A777E">
@@ -21,12 +22,11 @@
     if (!ios){ var l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.appendChild(l); }
   })();
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="fuentes/montserrat.css">
 <style>
 :root{
   --fondo:#FFF9F6; --superficie:#FFFFFF; --borde:#D5E7E7;
-  --texto:#14313A; --apoyo:#47626A; --tenue:#667D84;
+  --texto:#14313A; --apoyo:#47626A; --tenue:#586E75;
   --marca:#0A777E; --petroleo:#0A777E; --verde:#0A777E; --menta:#D6F3F1; --menta-suave:#E7F3F2; --coral:#F28C6B; --coral-suave:#FDEAE2;
   --turq-pastel:#D3EAE8; --turq-pastel-txt:#285C5E; --teja-pastel:#FCE1D6; --teja-txt:#8A452F;
   --font:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif; color-scheme:light;
@@ -558,9 +558,10 @@ $('b-cerrar').onclick = () => $('visor').hidden = true;
 const PRIVACIDAD = `<p>Esta app es solo tuya. Aquí está lo de tu hijo: tu registro, sus apoyos, las sesiones y los informes. Nadie más de ConectaTEA ve tu espacio, salvo Laura y el equipo que te acompaña, que guardan secreto profesional.</p>
 <p><b>Quién es responsable:</b> Laura Díaz Arráez (ConectaTEA).</p>
 <p><b>Para qué se usa lo que escribes:</b> solo para acompañarte a ti y a tu hijo en el programa. Nunca se vende ni se cede a nadie.</p>
-<p><b>Dónde se guarda:</b> en Google Workspace, en servidores protegidos y con acuerdo de protección de datos. Lo que escribes sin conexión se queda en tu móvil hasta que se envía.</p>
+<p><b>Con qué permiso:</b> con el consentimiento que nos diste al entrar en el programa para tratar los datos de salud de tu hijo, y porque los necesitamos para darte el servicio que has contratado.</p>
+<p><b>Dónde se guarda:</b> en Google Workspace (Google), en servidores protegidos y con acuerdo de protección de datos que cumple el RGPD. Esta app no usa cookies de publicidad ni de seguimiento. Lo que escribes sin conexión se queda en tu móvil hasta que se envía.</p>
 <p><b>Cuánto tiempo:</b> solo mientras estés en el programa. Al terminar, en el mes siguiente se borra todo. Si quieres guardarte algo, pídenos una copia antes.</p>
-<p><b>Tus derechos:</b> puedes ver, corregir o borrar tus datos y los de tu hijo, o retirar tu permiso, cuando quieras. Escríbenos a laura@familiasconectatea.com.</p>
+<p><b>Tus derechos:</b> puedes ver, corregir o borrar tus datos y los de tu hijo, o retirar tu permiso, cuando quieras. Escríbenos a laura@familiasconectatea.com. Si no te respondemos bien, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
 <p><b>Un consejo:</b> tu enlace y tu código son como una llave. No los compartas. Si cambias de móvil o crees que alguien los tiene, avísanos y te damos unos nuevos.</p>`;
 $('b-privacidad').onclick = () => { $('visor-tit').textContent = 'Tu privacidad'; const d = el('div', {class:'doc'}); d.innerHTML = PRIVACIDAD; $('visor-cont').replaceChildren(d); $('visor').hidden = false; };
 $('b-ver-registro').onclick = async () => {
