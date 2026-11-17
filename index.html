@@ -131,6 +131,8 @@ textarea{min-height:84px}
 .visor .in{max-width:640px;margin:0 auto;padding:12px 16px 40px}
 .visor .doc{background:var(--superficie);border:1.5px solid var(--borde);border-radius:6px;padding:18px;overflow-wrap:anywhere}
 .visor .doc p{margin:0 0 10px}
+.anadir{margin:-4px 0 18px;display:flex;flex-direction:column;gap:8px}
+.btn-anadir{align-self:flex-start;background:none;border:0;padding:6px 0;color:var(--verde);font-weight:700;font-size:14px;cursor:pointer}
 .visor img{width:100%;border-radius:6px}
 .cargando{padding:40px 0;text-align:center;color:var(--tenue)}
 
@@ -342,7 +344,7 @@ Entrad cuando tengáis un rato.</p>
       <button class="btn btn-prim" id="b-guardar">Guardar en mi registro</button>
       <p class="pie">Se añade a tu REGISTRO DIARIO, que Laura lee cada semana.</p>
       <button class="tarjeta fila" type="button" id="b-ver-registro" style="text-align:left;width:100%;color:inherit;margin-top:8px">
-        <div class="ico">DOC</div><div class="txt"><h4>Ver todo lo que he escrito</h4><p>Tu registro completo</p></div><span>›</span>
+        <div class="ico">DOC</div><div class="txt"><h4>Ver todo lo que he escrito</h4><p>Tu registro completo. Si se te olvidó algo, puedes añadirlo durante 7 días.</p></div><span>›</span>
       </button>
     </form>
     <div id="reg-ok" class="tarjeta ok" hidden>
@@ -442,7 +444,7 @@ async function enviarPendientes(){
   enviando = true;
   while (c.length){
     try { await srv(c[0].fn, TOKEN, LLAVE, ...c[0].args); c.shift(); local(COLA(), c); }
-    catch(e){ break; }
+    catch(e){ if (String(e && e.message).indexOf('CERRADO') >= 0){ c.shift(); local(COLA(), c); continue; } break; }
   }
   enviando = false;
 }
@@ -615,10 +617,51 @@ $('b-ver-registro').onclick = async () => {
     let html;
     try { html = await srv('verRegistro', TOKEN, LLAVE); local('ctea_reg_' + TOKEN, html); }
     catch(e){ html = sinRed(e) ? local('ctea_reg_' + TOKEN) : null; if (!html) throw e; }
-    const d = el('div', {class:'doc'}); d.innerHTML = html; $('visor-cont').replaceChildren(d);
+    const d = el('div', {class:'doc'}); d.innerHTML = html; ponerAnadir(d); $('visor-cont').replaceChildren(d);
   }
   catch(e){ if (!sinAcceso(e)) $('visor-cont').replaceChildren(el('p', {class:'vacio'}, sinRed(e) ? 'Sin conexión. Podrás verlo cuando tengas cobertura.' : 'No se ha podido abrir.')); }
 };
+
+// «Añadir algo que se me olvidó»: el servidor marca con data-reg los registros de los últimos 7 días.
+function ponerAnadir(doc){
+  doc.querySelectorAll('[data-reg]').forEach(p => {
+    const id = p.dataset.reg;
+    const caja = el('div', {class:'anadir'});
+    const boton = el('button', {type:'button', class:'btn-anadir'}, '+ Añadir algo que se me olvidó');
+    caja.append(boton);
+    boton.onclick = () => {
+      const ta = el('textarea', {placeholder:'¿Qué se te olvidó contar?', 'aria-label':'Lo que quieres añadir'});
+      const err = el('p', {class:'error'}); err.hidden = true;
+      const ok = el('button', {type:'button', class:'btn btn-prim'}, 'Añadir a este registro');
+      const no = el('button', {type:'button', class:'btn-anadir'}, 'Cancelar');
+      no.onclick = () => caja.replaceChildren(boton);
+      ok.onclick = async () => {
+        const t = ta.value.trim();
+        if (!t){ err.textContent = 'Escribe algo antes de añadir.'; err.hidden = false; return; }
+        err.hidden = true; ok.disabled = true;
+        const pegar = (aviso) => {
+          const hoy = new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' }).replace(',', '');
+          const etq = 'Añadido después (' + hoy + '):';
+          let ultimo = p; while (ultimo.nextElementSibling && ultimo.nextElementSibling !== caja) ultimo = ultimo.nextElementSibling;
+          ultimo.after(el('p', {}, el('b', {}, etq), ' ' + t));
+          caja.replaceChildren(el('p', {class:'pie', style:'text-align:left'}, aviso), boton);
+          try { localStorage.removeItem('ctea_reg_' + TOKEN); } catch(e){}
+        };
+        try { await srv('anadirRegistro', TOKEN, LLAVE, id, t); pegar('Añadido. Laura lo verá junto a este registro.'); }
+        catch(e){
+          if (sinAcceso(e)) return;
+          if (sinRed(e)){ encolar('anadirRegistro', [id, t]); pegar('Guardado en tu móvil. Se enviará a Laura en cuanto tengas conexión.'); return; }
+          err.textContent = String(e && e.message).indexOf('CERRADO') >= 0
+            ? 'Ya han pasado los 7 días para añadir a este registro. Puedes contarlo en un registro nuevo.'
+            : 'No se ha podido añadir. Lo que has escrito sigue aquí: prueba otra vez.';
+          err.hidden = false; ok.disabled = false;
+        }
+      };
+      caja.replaceChildren(ta, err, ok, no); ta.focus();
+    };
+    p.after(caja);
+  });
+}
 
 // ── Consentimiento ──
 $('c-salud').onchange = () => { $('b-aceptar').disabled = !$('c-salud').checked; };
