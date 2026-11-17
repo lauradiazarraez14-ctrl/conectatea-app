@@ -344,7 +344,7 @@ Entrad cuando tengáis un rato.</p>
       <button class="btn btn-prim" id="b-guardar">Guardar en mi registro</button>
       <p class="pie">Se añade a tu REGISTRO DIARIO, que Laura lee cada semana.</p>
       <button class="tarjeta fila" type="button" id="b-ver-registro" style="text-align:left;width:100%;color:inherit;margin-top:8px">
-        <div class="ico">DOC</div><div class="txt"><h4>Ver todo lo que he escrito</h4><p>Tu registro completo. Si se te olvidó algo, puedes añadirlo hasta el jueves a mediodía.</p></div><span>›</span>
+        <div class="ico">DOC</div><div class="txt"><h4>Ver todo lo que he escrito</h4><p>Tu registro completo. Si se te olvidó algo, puedes añadirlo.</p></div><span>›</span>
       </button>
     </form>
     <div id="reg-ok" class="tarjeta ok" hidden>
@@ -652,7 +652,7 @@ function ponerAnadir(doc){
           if (sinAcceso(e)) return;
           if (sinRed(e)){ encolar('anadirRegistro', [id, t]); pegar('Guardado en tu móvil. Se enviará a Laura en cuanto tengas conexión.'); return; }
           err.textContent = String(e && e.message).indexOf('CERRADO') >= 0
-            ? 'Este registro se cerró el jueves a mediodía, cuando Laura lee los registros de la semana. Puedes contarlo en un registro nuevo.'
+            ? 'Este registro ya está cerrado. Puedes contarlo en un registro nuevo.'
             : 'No se ha podido añadir. Lo que has escrito sigue aquí: prueba otra vez.';
           err.hidden = false; ok.disabled = false;
         }
