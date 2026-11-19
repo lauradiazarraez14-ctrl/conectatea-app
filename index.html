@@ -131,6 +131,9 @@ textarea{min-height:84px}
 .visor .in{max-width:640px;margin:0 auto;padding:12px 16px 40px}
 .visor .doc{background:var(--superficie);border:1.5px solid var(--borde);border-radius:6px;padding:18px;overflow-wrap:anywhere}
 .visor .doc p{margin:0 0 10px}
+.duda p{margin:0;white-space:pre-line}
+.duda small{display:block;margin-top:6px;color:var(--tenue);font-size:13px}
+.grupal-tit{font-weight:700;font-size:14px;margin:6px 0 0}
 .anadir{margin:-4px 0 18px;display:flex;flex-direction:column;gap:8px}
 .btn-anadir{align-self:flex-start;background:none;border:0;padding:6px 0;color:var(--verde);font-weight:700;font-size:14px;cursor:pointer}
 .visor img{width:100%;border-radius:6px}
@@ -273,6 +276,10 @@ Entrad cuando tengáis un rato.</p>
         <button class="btn btn-prim" type="button" id="b-avisar">Avisar en el grupo de Telegram</button>
       </div>
     </div>
+    <div id="dudas-bloque" hidden>
+      <div class="seccion-tit">Dudas para la grupal · <span id="n-dudas">0</span></div>
+      <div class="pila" id="dudas-laura"></div>
+    </div>
     <div class="seccion-tit">Apoyos por revisar · <span id="n-pend">0</span></div>
     <div class="pila" id="pendientes"></div>
     <div class="tarjeta ok" id="todo-hecho" hidden>
@@ -309,6 +316,9 @@ Entrad cuando tengáis un rato.</p>
     </div>
     <div class="pila">
       <div class="tarjeta" id="semana"></div>
+      <button class="tarjeta fila" type="button" id="b-dudas" style="text-align:left;width:100%;color:inherit">
+        <div class="ico c">?</div><div class="txt"><h4>Mis dudas</h4><p>Apunta lo que quieras preguntarle a Laura</p></div><span>›</span>
+      </button>
       <div class="seccion-tit">Próximas citas</div>
       <div class="pila" id="citas"></div>
       <button class="enlace" type="button" id="b-privacidad" style="align-self:center;margin-top:18px;color:var(--tenue)">Privacidad</button>
@@ -409,7 +419,7 @@ function guardarLlave(v){ try{ v ? localStorage.setItem(CLAVE, v) : localStorage
 function leerLlave(){ try{ return localStorage.getItem(CLAVE); }catch(e){ return null; } }
 
 // Las lecturas se reintentan solas si Google tarda o falla un momento (las escrituras no, para no duplicar).
-const LECTURAS = ['cargar','verRegistro','abrir','entrar','entrarLaura','pendientes','borradores'];
+const LECTURAS = ['cargar','verRegistro','abrir','entrar','entrarLaura','pendientes','borradores','dudasLaura'];
 const espera = (ms) => new Promise(r => setTimeout(r, ms));
 async function srv(fn, ...args){
   const intentos = LECTURAS.includes(fn) ? 3 : 1;
@@ -663,6 +673,47 @@ function ponerAnadir(doc){
   });
 }
 
+// ── Mis dudas ──
+// Buzón de inquietudes: Laura las responde en la grupal del jueves (no por escrito).
+function tarjetaDuda(d){
+  return el('div', {class:'tarjeta duda'}, el('p', {}, d.texto),
+    el('small', {}, d.grupal ? 'Para la grupal del ' + d.grupal : 'Se enviará en cuanto tengas conexión.'));
+}
+function abrirDudas(){
+  $('visor-tit').textContent = 'Mis dudas';
+  const ta = el('textarea', {'aria-label':'Tu duda', placeholder:'Ej.: Últimamente se queda mirando los pájaros mucho rato. ¿Por qué puede ser?'});
+  const err = el('p', {class:'error'}); err.hidden = true;
+  const ok = el('p', {class:'pie', style:'text-align:left;color:var(--verde);font-weight:600'}); ok.hidden = true;
+  const btn = el('button', {class:'btn btn-prim', type:'button'}, 'Enviar a Laura');
+  const lista = el('div', {class:'pila'});
+  const tit = el('div', {class:'seccion-tit'}, 'Lo que has preguntado');
+  const pintarLista = () => { const ds = (DATOS && DATOS.dudas) || []; tit.hidden = !ds.length; lista.replaceChildren(...ds.map(tarjetaDuda)); };
+  btn.onclick = async () => {
+    const t = ta.value.trim();
+    if (!t){ err.textContent = 'Escribe tu duda antes de enviarla.'; err.hidden = false; return; }
+    err.hidden = true; ok.hidden = true; btn.disabled = true;
+    const guardar = (d) => { DATOS.dudas = [d].concat(DATOS.dudas || []); local('ctea_datos_' + TOKEN, DATOS); ta.value = ''; pintarLista(); };
+    try {
+      const r = await srv('enviarDuda', TOKEN, LLAVE, t);
+      guardar({ texto: t, grupal: r.grupal, fecha: Date.now() });
+      ok.textContent = 'Enviada. Laura la responderá en la grupal del ' + r.grupal + '.'; ok.hidden = false;
+    } catch(e){
+      if (sinAcceso(e)) return;
+      if (sinRed(e)){ encolar('enviarDuda', [t]); guardar({ texto: t, grupal: '', fecha: Date.now() }); ok.textContent = 'Guardada en tu móvil. Se enviará a Laura en cuanto tengas conexión.'; ok.hidden = false; }
+      else { err.textContent = 'No se ha podido enviar. Lo que has escrito sigue aquí: prueba otra vez.'; err.hidden = false; }
+    }
+    btn.disabled = false;
+  };
+  pintarLista();
+  $('visor-cont').replaceChildren(el('div', {class:'pila'},
+    el('p', {style:'margin:0'}, '¿Te preguntas por qué hace algo, o te inquieta algo nuevo? Apúntalo aquí.'),
+    ta, err, btn,
+    el('p', {class:'pie', style:'text-align:left'}, 'Laura las responde en la grupal del jueves. Si es urgente, escríbele por WhatsApp.'),
+    ok, tit, lista));
+  $('visor').hidden = false;
+}
+$('b-dudas').onclick = abrirDudas;
+
 // ── Consentimiento ──
 $('c-salud').onchange = () => { $('b-aceptar').disabled = !$('c-salud').checked; };
 $('b-legal').onclick = () => { $('visor-tit').textContent = 'Cómo protegemos tus datos'; const d = el('div', {class:'doc'}); d.innerHTML = LEGAL; $('visor-cont').replaceChildren(d); $('visor').hidden = false; };
@@ -776,9 +827,19 @@ const hace = (ms) => { const m = Math.round((Date.now() - ms) / 6e4); return m <
 async function cargarLaura(){
   $('v-cargando').hidden = false;
   let lista;
-  try { let b; [lista, b] = await Promise.all([srv('pendientes', LAURA, LLAVE), srv('borradores', LAURA, LLAVE)]); BORR = b.lista; FALTA_AVISO = b.faltaAviso; }
+  try { let b; [lista, b, DUDAS_L] = await Promise.all([srv('pendientes', LAURA, LLAVE), srv('borradores', LAURA, LLAVE), srv('dudasLaura', LAURA, LLAVE)]); BORR = b.lista; FALTA_AVISO = b.faltaAviso; }
   catch(e){ if (!sinAcceso(e)) $('v-cargando').textContent = sinRed(e) ? 'Sin conexión. Abre tu pantalla cuando tengas cobertura.' : 'No se ha podido cargar. Cierra y vuelve a abrir.'; return; }
-  pintarLaura(lista); pintarPautas(); mostrar('laura');
+  pintarLaura(lista); pintarPautas(); pintarDudasLaura(); mostrar('laura');
+}
+
+let DUDAS_L = [];
+function pintarDudasLaura(){
+  const n = DUDAS_L.reduce((a, g) => a + g.dudas.length, 0);
+  $('dudas-bloque').hidden = !n; $('n-dudas').textContent = n;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  $('dudas-laura').replaceChildren(...DUDAS_L.flatMap(g => [
+    el('p', {class:'grupal-tit'}, new Date(g.cuando).setHours(0, 0, 0, 0) === hoy.getTime() ? 'Grupal de hoy' : 'Grupal del ' + g.grupal),
+    ...g.dudas.map(d => el('div', {class:'tarjeta duda'}, el('h4', {style:'margin-bottom:6px'}, d.madre + (d.nino ? ' · ' + d.nino : '')), el('p', {}, d.texto), el('small', {}, 'Llegó ' + hace(d.fecha))))]));
 }
 
 let BORR = [], PUBLICADAS = 0, FALTA_AVISO = false;
